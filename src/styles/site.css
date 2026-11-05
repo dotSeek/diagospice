@@ -50,7 +50,6 @@ a {
 .menu-item__price,
 .deal__price,
 .buffet-price strong,
-.buffet-dessert,
 .contact__phone,
 .reserve-card__phone,
 .hero__tag {
@@ -834,7 +833,20 @@ button {
 .menu-tagline {
   margin-top: var(--space-8);
   text-align: center;
-  font-size: var(--text-xs);
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 700;
+  font-size: var(--text-sm);
+  text-transform: uppercase;
+  color: var(--color-red);
+}
+
+.menu-delivery {
+  max-width: 640px;
+  margin: var(--space-4) auto 0;
+  text-align: center;
+  font-size: var(--text-sm);
+  line-height: 1.35;
 }
 
 .menu-jump {
@@ -859,8 +871,7 @@ button {
   text-decoration: underline;
 }
 
-.menu-download,
-.bar-head__actions {
+.menu-download {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-8);
@@ -1096,12 +1107,6 @@ button.button:hover {
   line-height: 1.6;
 }
 
-.buffet-dessert {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--space-4);
-}
-
 /* Gallery */
 .section-block {
   margin-top: var(--space-14);
@@ -1252,27 +1257,6 @@ button.button:hover {
 .location__art {
   flex: none;
   width: clamp(120px, 14cqw, 210px);
-  color: var(--color-ink);
-}
-
-.bar-head {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: var(--space-11);
-  margin-bottom: var(--space-13);
-}
-
-.bar-head__text {
-  max-width: 620px;
-  margin-block: var(--space-8);
-  font-size: var(--text-sm);
-  line-height: 1.35;
-}
-
-.bar-head__art {
-  flex: none;
-  width: clamp(120px, 20cqw, 320px);
   color: var(--color-ink);
 }
 
@@ -1687,11 +1671,6 @@ button.button:hover {
 
   .reserve-card__body {
     padding: var(--space-13) var(--space-8) var(--space-9);
-  }
-
-  .bar-head {
-    flex-direction: column-reverse;
-    align-items: flex-start;
   }
 
   .location__art {

@@ -1,7 +1,6 @@
 // Builds what search engines and social apps read without running the React site:
 //   public/og/*.jpg            social preview images, 1200 x 630
-//   public/menu/index.html     shareable food menu page that links to the PDF
-//   public/bar-menu/index.html shareable bar menu page that links to the PDF
+//   public/menu/index.html     shareable delivery menu page that links to the PDF
 //   public/sitemap.xml
 // A PDF cannot carry Open Graph tags, so these pages are the links to share.
 // Run with: npm run menu:pdf  (needs Google Chrome installed, or set CHROME_PATH)
@@ -10,8 +9,7 @@ import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSy
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { barCategories } from "../src/data/barMenu.ts";
-import { buffet, formatPrice, menuCategories } from "../src/data/menu.ts";
+import { buffet, delivery, formatPrice, menuCategories } from "../src/data/menu.ts";
 import type { MenuCategoryData, MenuItemData } from "../src/data/menu.ts";
 import { restaurant } from "../src/data/restaurant.ts";
 
@@ -54,8 +52,7 @@ p{margin:0;font:400 32px/1.3 Bitter,serif;color:#1a1a1a}
 
 const images: { file: string; word: string; line: string; size: number }[] = [
   { file: "diago-spice", word: "Diago Spice", line: "Frontier spirit. Serious spice.", size: 88 },
-  { file: "menu", word: "Menu", line: "Food, meal deals and buffet", size: 150 },
-  { file: "bar-menu", word: "Bar menu", line: "Food and soft drinks from the bar", size: 118 },
+  { file: "menu", word: "Menu", line: "Delivery menu. Free within 3 miles", size: 150 },
 ];
 
 const workDir = mkdtempSync(join(tmpdir(), "diago-og-"));
@@ -120,8 +117,9 @@ const categoryHtml = (category: MenuCategoryData): string => {
 };
 
 const buffetHtml = `<section><h2>Buffet menu</h2><p style="text-align:center">${esc(buffet.days)}, ${esc(buffet.hours)}. Adults ${formatPrice(buffet.adultPrice)}, ${esc(buffet.kidsNote.toLowerCase())} ${formatPrice(buffet.kidsPrice)}. For booking call <a href="${restaurant.phoneHref}">${esc(buffet.bookingPhone)}</a>.</p></section>
-${buffet.groups.map((group) => `<section><h2>${esc(group.title)}</h2><ul class="plain">${group.items.map((item) => `<li>${esc(item)}</li>`).join("")}</ul></section>`).join("")}
-<section><h2>Buffet desserts</h2><ul>${buffet.desserts.map(itemRow).join("")}</ul></section>`;
+${buffet.groups.map((group) => `<section><h2>${esc(group.title)}</h2><ul class="plain">${group.items.map((item) => `<li>${esc(item)}</li>`).join("")}</ul></section>`).join("")}`;
+
+const deliveryHtml = `<section><h2>Delivery</h2><p style="text-align:center">${esc(delivery.howToOrder)} ${esc(delivery.freeDelivery)}. Minimum order ${delivery.minimumOrder}. <a href="${restaurant.phoneHref}">${esc(restaurant.phoneDisplay)}</a> | <a href="${restaurant.whatsappUrl}">WhatsApp</a></p></section>`;
 
 const menuJsonLd = (name: string, url: string, categories: MenuCategoryData[]): string =>
   JSON.stringify({
@@ -212,27 +210,15 @@ const pageHtml = (page: SharePage): string => {
 const pages: SharePage[] = [
   {
     folder: "menu",
-    heading: "Menu",
-    title: "Menu | Diago Spice, Clase, Swansea",
-    description: `See the Diago Spice menu with prices: curries, kottu, biriyani, burgers, meal deals and the weekend buffet. View or download the PDF menu.`,
+    heading: "Delivery menu",
+    title: "Delivery Menu | Diago Spice, Clase, Swansea",
+    description: `Diago Spice delivery menu with prices: curries, kottu, biriyani, burgers and meal deals. Free delivery within 3 miles, minimum order £20. Download the PDF.`,
     image: "menu",
     imageAlt: "Diago Spice logo beside the word Menu",
     pdfUrl: restaurant.menuPdfUrl,
     pdfFilename: restaurant.menuPdfFilename,
-    body: menuCategories.map(categoryHtml).join("") + buffetHtml,
-    jsonLd: menuJsonLd("Diago Spice menu", `${site}/menu/`, menuCategories),
-  },
-  {
-    folder: "bar-menu",
-    heading: "Bar menu",
-    title: "Bar Menu | Diago Spice, Clase, Swansea",
-    description: `See the Diago Spice bar menu with prices: soup, starters, mains with rice or nan, burgers with chips and soft drinks. View or download the PDF.`,
-    image: "bar-menu",
-    imageAlt: "Diago Spice logo beside the words Bar menu",
-    pdfUrl: restaurant.barMenuPdfUrl,
-    pdfFilename: restaurant.barMenuPdfFilename,
-    body: barCategories.map(categoryHtml).join(""),
-    jsonLd: menuJsonLd("Diago Spice bar menu", `${site}/bar-menu/`, barCategories),
+    body: deliveryHtml + menuCategories.map(categoryHtml).join("") + buffetHtml,
+    jsonLd: menuJsonLd("Diago Spice delivery menu", `${site}/menu/`, menuCategories),
   },
 ];
 
@@ -243,7 +229,7 @@ for (const page of pages) {
 }
 
 // ---- Sitemap
-const urls = ["/", "/menu/", "/bar-menu/", restaurant.menuPdfUrl, restaurant.barMenuPdfUrl];
+const urls = ["/", "/menu/", restaurant.menuPdfUrl];
 writeFileSync(
   pub("sitemap.xml"),
   `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls

@@ -42,17 +42,6 @@ export function BuffetMenu() {
               </ul>
             </div>
           ))}
-          <div className="buffet-group">
-            <h3>Desserts</h3>
-            <ul>
-              {buffet.desserts.map((item) => (
-                <li className="buffet-dessert" key={item.name}>
-                  <span>{item.name}</span>
-                  <span>{formatPrice(item.price)}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
         </div>
       </div>
     </div>

@@ -1,0 +1,7 @@
+{
+  "redirects": [
+    { "source": "/bar-menu", "destination": "/menu/", "permanent": true },
+    { "source": "/bar-menu/", "destination": "/menu/", "permanent": true },
+    { "source": "/diago-spice-bar-menu.pdf", "destination": "/diago-spice-menu.pdf", "permanent": true }
+  ]
+}

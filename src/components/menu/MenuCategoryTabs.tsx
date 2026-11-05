@@ -1,6 +1,6 @@
 import { buffet, menuCategories } from "../../data/menu";
 
-const links = [...menuCategories.map(({ id, label }) => ({ id, label })), { id: buffet.id, label: buffet.label }, { id: "bar-menu", label: "Bar menu" }];
+const links = [...menuCategories.map(({ id, label }) => ({ id, label })), { id: buffet.id, label: buffet.label }];
 
 /** Category navigation: the whole menu sits on one page, so these jump to each part. */
 export function MenuCategoryTabs() {

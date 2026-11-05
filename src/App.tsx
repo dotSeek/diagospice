@@ -1,7 +1,6 @@
 import { Footer } from "./components/layout/Footer";
 import { Header } from "./components/layout/Header";
 import { AboutSection } from "./components/sections/AboutSection";
-import { BarMenuSection } from "./components/sections/BarMenuSection";
 import { ContactSection } from "./components/sections/ContactSection";
 import { GallerySection } from "./components/sections/GallerySection";
 import { HeroSection } from "./components/sections/HeroSection";
@@ -22,7 +21,6 @@ export function App() {
               <HeroSection />
               <AboutSection />
               <MenuSection />
-              <BarMenuSection />
               <GallerySection />
               <div className="visit section-block">
                 <LocationSection />

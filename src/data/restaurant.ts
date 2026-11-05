@@ -18,18 +18,14 @@ export const restaurant = {
   directionsUrl: `https://www.google.com/maps/dir/?api=1&destination=${addressQuery}`,
   menuPdfUrl: "/diago-spice-menu.pdf",
   menuPdfFilename: "Diago-Spice-Menu.pdf",
-  barMenuPdfUrl: "/diago-spice-bar-menu.pdf",
-  barMenuPdfFilename: "Diago-Spice-Bar-Menu.pdf",
-  // Share these rather than the PDFs: only the pages carry a social preview.
+  // Share this rather than the PDF: only the page carries a social preview.
   menuPageUrl: "https://diagospice.co.uk/menu/",
-  barMenuPageUrl: "https://diagospice.co.uk/bar-menu/",
 } as const;
 
 export const navLinks = [
   { label: "Home", href: "#home" },
   { label: "About us", href: "#about" },
   { label: "Menu", href: "#menu" },
-  { label: "Bar menu", href: "#bar-menu" },
   { label: "Gallery", href: "#gallery" },
   { label: "Contact", href: "#contact" },
   { label: "Location", href: "#location" },

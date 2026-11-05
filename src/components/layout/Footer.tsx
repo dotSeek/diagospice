@@ -26,11 +26,6 @@ export function Footer() {
                 Download the menu
               </a>
             </li>
-            <li>
-              <a href={restaurant.barMenuPdfUrl} download={restaurant.barMenuPdfFilename}>
-                Download the bar menu
-              </a>
-            </li>
           </ul>
         </div>
         <div>
