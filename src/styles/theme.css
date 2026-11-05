@@ -1,0 +1,59 @@
+/* Diago Spice design tokens. See DESIGN.md. */
+:root {
+  --color-paper: #f9f8f2;
+  --color-ink: #1a1a1a;
+  --color-black: #1a1a1a;
+  --color-red: #c4060c; /* from the red range in the logo */
+  --color-red-dark: #960408;
+  --color-red-40: rgb(196 6 12 / 0.4);
+  --color-border: #e6e6e6;
+  --color-stone: #cabfb5;
+  --color-stone-15: rgb(202 191 181 / 0.22);
+  --color-wallpaper: #ddd8cc;
+  --color-white: #ffffff;
+  --overlay: rgb(26 26 26 / 0.62);
+  --shadow-sheet: -2px 2px 3px rgb(0 0 0 / 0.4);
+
+  --font-display: "Playfair Display Variable", Georgia, serif;
+  --font-body: "Bitter Variable", Georgia, serif;
+
+  --text-fine: 14px;
+  --text-xs: 18px;
+  --text-sm: 24px;
+  --text-base: 28px;
+  --text-lg: 37px;
+  --text-xl: 81px;
+  --text-2xl: 130px;
+
+  --weight-light: 300;
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  --stroke-1: 1px;
+  --stroke-2: 2px;
+
+  --space-1: 3px;
+  --space-2: 4px;
+  --space-3: 5px;
+  --space-4: 8px;
+  --space-5: 9px;
+  --space-6: 13px;
+  --space-7: 15px;
+  --space-8: 16px;
+  --space-9: 28px;
+  --space-10: 32px;
+  --space-11: 40px;
+  --space-12: 48px;
+  --space-13: 64px;
+  --space-14: 80px;
+  --space-15: 144px;
+
+  --radius-sm: 2px;
+  --duration: 180ms;
+  --sheet-max: 1820px;
+
+  --texture-paper: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='4' seed='3'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .33 0 0 0 0 .3 0 0 0 .05 0'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23p)'/%3E%3C/svg%3E");
+  --texture-wallpaper: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' fill='none' stroke='%23e9e5db' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='M30 112C14 88 16 66 30 50c14 16 16 38 0 62M30 50C24 34 12 28-2 30c2 14 14 24 32 20M30 50c6-16 18-22 32-20-2 14-14 24-32 20'/%3E%3Cpath d='M90 52C74 28 76 6 90-10c14 16 16 38 0 62M90 112C74 88 76 66 90 50M90 50c-6-16-18-22-32-20M90 50c6-16 18-22 32-20-2 14-14 24-32 20'/%3E%3C/svg%3E");
+}
