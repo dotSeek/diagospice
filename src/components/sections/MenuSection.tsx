@@ -9,19 +9,20 @@ import { MenuShareButton } from "../menu/MenuShareButton";
 import { Button } from "../ui/Button";
 import { WhatsAppOrderCard } from "../menu/WhatsAppOrderCard";
 import { restaurant } from "../../data/restaurant";
+import { Reveal } from "../motion/Reveal";
 
 const category = (id: string, art?: ArtName) => <MenuCategory category={categoryById(id)} art={art} />;
 
 export function MenuSection() {
   return (
     <section id="menu" aria-labelledby="menu-title">
-      <div className="menu-hero">
+      <Reveal className="menu-hero" effect="zoom">
         <hr className="rule" />
         <h2 className="display" id="menu-title">
           Menu
         </h2>
         <hr className="rule" />
-      </div>
+      </Reveal>
       <p className="menu-tagline">Delivery menu</p>
       <MenuCategoryTabs />
       <div className="menu-download">

@@ -2,6 +2,7 @@ import { useCallback, useState } from "react";
 import { galleryImages } from "../../data/images";
 import { ImageCard } from "../ui/ImageCard";
 import { useDialog } from "../ui/useDialog";
+import { Reveal } from "../motion/Reveal";
 
 export function GallerySection() {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
@@ -16,21 +17,21 @@ export function GallerySection() {
 
   return (
     <section id="gallery" className="section-block" aria-labelledby="gallery-title">
-      <div className="section-head">
+      <Reveal className="section-head" effect="slideLeft">
         <h2 className="display" id="gallery-title">
           Gallery
         </h2>
-      </div>
+      </Reveal>
       <div className="gallery">
         {galleryImages.map((image, index) => (
-          <div key={image.id} className={image.span ? `gallery__item--${image.span}` : undefined}>
+          <Reveal key={image.id} className={image.span ? `gallery__item--${image.span}` : undefined} effect="flipCard" delay={(index % 4) * 0.09} amount={0.3}>
             <ImageCard
               src={image.thumb}
               alt={image.alt}
               caption={image.caption}
               onOpen={() => setActiveIndex(index)}
             />
-          </div>
+          </Reveal>
         ))}
       </div>
       <p className="gallery__note">Illustrative photography.</p>

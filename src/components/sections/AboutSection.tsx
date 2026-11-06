@@ -1,5 +1,6 @@
 import { aboutImages } from "../../data/images";
 import { RedBlock } from "../ui/SectionHeading";
+import { Reveal } from "../motion/Reveal";
 
 const notes = [
   {
@@ -19,7 +20,7 @@ const notes = [
 export function AboutSection() {
   return (
     <section id="about" className="about" aria-labelledby="about-title">
-      <div>
+      <Reveal effect="slideLeft">
         <RedBlock kicker="Get to know us" title="Who we are" id="about-title" />
         <div className="about__text">
           <p className="dropcap">
@@ -27,18 +28,18 @@ export function AboutSection() {
             flavour. Come as you are and bring your appetite.
           </p>
           <div className="about__notes">
-            {notes.map((note) => (
-              <div className="about__note" key={note.title}>
+            {notes.map((note, index) => (
+              <Reveal className="about__note" key={note.title} delay={0.1 + index * 0.1}>
                 <h3>{note.title}</h3>
                 <p>{note.body}</p>
-              </div>
+              </Reveal>
             ))}
           </div>
         </div>
-      </div>
-      <figure className="about__photo">
+      </Reveal>
+      <Reveal as="figure" className="about__photo" effect="flipCard" delay={0.15}>
         <img src={aboutImages.primary} alt="A curry served with rice" loading="lazy" />
-      </figure>
+      </Reveal>
     </section>
   );
 }

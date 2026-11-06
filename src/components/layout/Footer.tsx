@@ -1,11 +1,12 @@
 import { navLinks, restaurant } from "../../data/restaurant";
 import { BadgeIcon } from "../ui/BadgeIcon";
 import { SocialLinks } from "../ui/SocialLinks";
+import { Reveal } from "../motion/Reveal";
 
 export function Footer() {
   return (
     <footer className="footer">
-      <div className="footer__grid">
+      <Reveal className="footer__grid" effect="rise" amount={0.15}>
         <div>
           <img className="footer__logo" src="/brand/logo.webp" alt={`${restaurant.name} logo`} width={640} height={731} loading="lazy" />
           <p>Curries, kottu, biriyani, burgers and wings, with a buffet from Friday to Sunday.</p>
@@ -48,7 +49,7 @@ export function Footer() {
             ))}
           </address>
         </div>
-      </div>
+      </Reveal>
       <p className="footer__legal">
         © {new Date().getFullYear()} {restaurant.name}. All rights reserved.
       </p>

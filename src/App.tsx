@@ -6,11 +6,16 @@ import { GallerySection } from "./components/sections/GallerySection";
 import { HeroSection } from "./components/sections/HeroSection";
 import { LocationSection } from "./components/sections/LocationSection";
 import { MenuSection } from "./components/sections/MenuSection";
+import { LazyMotion, MotionConfig, domAnimation } from "motion/react";
+import { ScrollProgress } from "./components/motion/ScrollProgress";
 import { WhatsAppFloat } from "./components/ui/WhatsAppFloat";
 
 export function App() {
   return (
-    <>
+    // reducedMotion="user": visitors who ask their device for less motion get no movement.
+    <MotionConfig reducedMotion="user">
+      <LazyMotion features={domAnimation} strict>
+      <ScrollProgress />
       <a className="skip-link" href="#main">
         Skip to content
       </a>
@@ -35,6 +40,7 @@ export function App() {
         <div className="sheet__end" />
       </div>
       <WhatsAppFloat />
-    </>
+      </LazyMotion>
+    </MotionConfig>
   );
 }

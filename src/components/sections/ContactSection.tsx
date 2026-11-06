@@ -3,12 +3,17 @@ import { restaurant } from "../../data/restaurant";
 import { Artwork } from "../ui/Artwork";
 import { RedBlock } from "../ui/SectionHeading";
 import { SocialLinks } from "../ui/SocialLinks";
+import { Reveal } from "../motion/Reveal";
 
 export function ContactSection() {
   return (
     <section id="contact" className="contact" aria-labelledby="contact-title">
-      <RedBlock kicker="Book now" title="Reserve" id="contact-title" />
-      <Artwork name="telephone" className="contact__art" />
+      <Reveal effect="slideRight">
+        <RedBlock kicker="Book now" title="Reserve" id="contact-title" />
+      </Reveal>
+      <Reveal effect="zoom" delay={0.1}>
+        <Artwork name="telephone" className="contact__art" />
+      </Reveal>
       <a className="contact__phone" href={restaurant.phoneHref}>
         {restaurant.phoneDisplay}
       </a>

@@ -2191,3 +2191,24 @@ button.button:hover {
     animation-duration: 0ms !important;
   }
 }
+
+/* Gold scroll progress bar (Motion drives scaleX) */
+.scroll-progress {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 70;
+  height: 3px;
+  background: var(--gradient-gold);
+  box-shadow: 0 0 10px rgb(240 168 58 / 0.6);
+  transform-origin: 0 50%;
+  pointer-events: none;
+}
+
+/* 3D flips need room to turn without being clipped by the frame */
+.menu-list,
+.stroke-card__inner,
+.buffet-groups,
+.gallery,
+.info-cards {
+  perspective: 1200px;
+}
