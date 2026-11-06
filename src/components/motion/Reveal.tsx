@@ -23,8 +23,8 @@ const hidden: Record<RevealEffect, TargetAndTransition> = {
   zoom: { opacity: 0, scale: 0.92 },
   slideLeft: { opacity: 0, x: -48 },
   slideRight: { opacity: 0, x: 48 },
-  flipDown: { opacity: 0, rotateX: -80, transformPerspective: 900 },
-  flipCard: { opacity: 0, rotateY: 75, transformPerspective: 1100 },
+  flipDown: { opacity: 0, rotateX: -35, y: 10, transformPerspective: 900 },
+  flipCard: { opacity: 0, rotateY: 35, transformPerspective: 1100 },
 };
 
 const shown: TargetAndTransition = { opacity: 1, x: 0, y: 0, scale: 1, rotateX: 0, rotateY: 0 };
@@ -55,7 +55,7 @@ export function Reveal({
   className,
   id,
   delay = 0,
-  amount = 0.2,
+  amount = 0.1,
   duration = REVEAL_DURATION,
   style,
 }: RevealProps) {
@@ -67,8 +67,65 @@ export function Reveal({
       style={{ ...origin[effect], ...style }}
       initial={hidden[effect]}
       whileInView={shown}
-      viewport={{ once: true, amount, margin: "0px 0px -6% 0px" }}
+      viewport={{ once: true, amount }}
       transition={{ duration, ease: EASE_OUT, delay }}
+    >
+      {children}
+    </Component>
+  );
+}
+
+interface RevealGroupProps {
+  children?: ReactNode;
+  as?: Tag;
+  className?: string;
+  id?: string;
+  /** Seconds between each child starting. */
+  stagger?: number;
+  style?: CSSProperties;
+}
+
+/**
+ * Watches one untransformed container and plays its RevealItem children in sequence.
+ * Used for long lists (menu rows, deal cards): the visibility check runs on the list itself,
+ * never on a rotated row, so every row reliably appears on every browser, iOS Safari included.
+ */
+export function RevealGroup({ children, as = "div", className, id, stagger = 0.045, style }: RevealGroupProps) {
+  const Component = m[as];
+  return (
+    <Component
+      className={className}
+      id={id}
+      style={style}
+      initial="hidden"
+      whileInView="shown"
+      viewport={{ once: true, amount: 0 }}
+      variants={{ hidden: {}, shown: { transition: { staggerChildren: stagger } } }}
+    >
+      {children}
+    </Component>
+  );
+}
+
+interface RevealItemProps {
+  children?: ReactNode;
+  as?: Tag;
+  effect?: RevealEffect;
+  className?: string;
+  duration?: number;
+}
+
+/** A child of RevealGroup. It has no visibility check of its own; the group starts it. */
+export function RevealItem({ children, as = "div", effect = "rise", className, duration = 0.55 }: RevealItemProps) {
+  const Component = m[as];
+  return (
+    <Component
+      className={className}
+      style={origin[effect]}
+      variants={{
+        hidden: hidden[effect],
+        shown: { ...shown, transition: { duration, ease: EASE_OUT } },
+      }}
     >
       {children}
     </Component>

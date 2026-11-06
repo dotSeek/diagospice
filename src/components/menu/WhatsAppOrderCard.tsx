@@ -6,7 +6,7 @@ import { Reveal } from "../motion/Reveal";
 /** Scan or tap to order. The QR code is generated from restaurant.whatsappUrl by the menu build. */
 export function WhatsAppOrderCard() {
   return (
-    <Reveal className="wa-card" effect="flipDown" amount={0.3}>
+    <Reveal className="wa-card" effect="flipDown" amount={0.15}>
       <a className="wa-card__qr" href={restaurant.whatsappUrl} target="_blank" rel="noopener noreferrer">
         <span className="wa-card__scan">Scan to order</span>
         <img src="/brand/whatsapp-qr.svg" alt="QR code that opens a WhatsApp order chat with Diago Spice" width={160} height={160} loading="lazy" />

@@ -4,7 +4,7 @@ import { Artwork } from "../ui/Artwork";
 import { DishTitle } from "../ui/SectionHeading";
 import { MenuItem } from "./MenuItem";
 import { MenuItemCard } from "./MenuItemCard";
-import { Reveal } from "../motion/Reveal";
+import { Reveal, RevealGroup } from "../motion/Reveal";
 
 interface MenuCategoryProps {
   category: MenuCategoryData;
@@ -20,9 +20,11 @@ export function MenuCategory({ category, art }: MenuCategoryProps) {
           <div className="title-rule" aria-hidden="true">
             <span className="diamond" />
           </div>
-          {category.deals.map((deal, index) => (
-            <MenuItemCard key={deal.name} deal={deal} index={index} />
-          ))}
+          <RevealGroup stagger={0.12}>
+            {category.deals.map((deal) => (
+              <MenuItemCard key={deal.name} deal={deal} />
+            ))}
+          </RevealGroup>
           {art ? <Artwork name={art} className="menu-art" /> : null}
         </div>
       </Reveal>
@@ -31,14 +33,14 @@ export function MenuCategory({ category, art }: MenuCategoryProps) {
 
   return (
     <div className="menu-category" id={category.id}>
-      <Reveal effect="zoom" amount={0.8}>
+      <Reveal effect="zoom" amount={0.5}>
         <DishTitle>{category.label}</DishTitle>
       </Reveal>
-      <ul className="menu-list">
-        {category.items.map((item, index) => (
-          <MenuItem key={item.name} item={item} index={index} />
+      <RevealGroup as="ul" className="menu-list">
+        {category.items.map((item) => (
+          <MenuItem key={item.name} item={item} />
         ))}
-      </ul>
+      </RevealGroup>
     </div>
   );
 }

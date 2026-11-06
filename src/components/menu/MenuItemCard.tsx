@@ -1,13 +1,13 @@
 import { formatPrice } from "../../data/menu";
 import type { DealData } from "../../data/menu";
-import { Reveal } from "../motion/Reveal";
+import { RevealItem } from "../motion/Reveal";
 
-export function MenuItemCard({ deal, index = 0 }: { deal: DealData; index?: number }) {
+export function MenuItemCard({ deal }: { deal: DealData }) {
   return (
-    <Reveal as="article" className="deal" effect="flipCard" delay={index * 0.12} amount={0.4}>
+    <RevealItem as="article" className="deal" effect="flipCard" duration={0.6}>
       <h4 className="deal__name">{deal.name}</h4>
       <p className="deal__includes">{deal.includes.join(", ")}</p>
       <p className="deal__price">{formatPrice(deal.price)}</p>
-    </Reveal>
+    </RevealItem>
   );
 }

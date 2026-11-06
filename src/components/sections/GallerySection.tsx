@@ -24,7 +24,7 @@ export function GallerySection() {
       </Reveal>
       <div className="gallery">
         {galleryImages.map((image, index) => (
-          <Reveal key={image.id} className={image.span ? `gallery__item--${image.span}` : undefined} effect="flipCard" delay={(index % 4) * 0.09} amount={0.3}>
+          <Reveal key={image.id} className={image.span ? `gallery__item--${image.span}` : undefined} effect="flipCard" delay={(index % 4) * 0.09} amount={0.15}>
             <ImageCard
               src={image.thumb}
               alt={image.alt}
