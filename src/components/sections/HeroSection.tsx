@@ -5,11 +5,7 @@ import { restaurant } from "../../data/restaurant";
 import { BadgeIcon } from "../ui/BadgeIcon";
 import { Button } from "../ui/Button";
 
-const chips = [
-  "Order via WhatsApp",
-  "Meal deals",
-  "Weekend buffet",
-];
+const chips = ["Meal deals", "Weekend buffet"];
 
 const icon = (path: ReactNode) => (
   <span className="info-card__icon" aria-hidden="true">
