@@ -28,13 +28,13 @@
           <article class="menu-card">
             <h2>Restaurant menu</h2>
             <p>Dine in prices, A4, 8 pages</p>
-            <a class="btn btn--gold" href="/api/staff/menu?name=restaurant" target="_blank" rel="noopener">View</a>
+            <a class="btn btn--gold" href="/api/staff/menu?name=restaurant" data-view="restaurant" data-title="Restaurant menu">View</a>
             <a class="btn btn--outline" href="/api/staff/menu?name=restaurant&amp;download=1">Download PDF</a>
           </article>
           <article class="menu-card">
             <h2>Bar menu</h2>
             <p>Dine in prices, A4, 7 pages</p>
-            <a class="btn btn--gold" href="/api/staff/menu?name=bar" target="_blank" rel="noopener">View</a>
+            <a class="btn btn--gold" href="/api/staff/menu?name=bar" data-view="bar" data-title="Bar menu">View</a>
             <a class="btn btn--outline" href="/api/staff/menu?name=bar&amp;download=1">Download PDF</a>
           </article>
         </div>
@@ -43,6 +43,20 @@
 
       <p class="staff__back"><a href="/">Back to the website</a></p>
     </main>
+
+    <dialog class="viewer" id="viewer" aria-labelledby="viewer-title">
+      <header class="viewer__bar">
+        <h2 id="viewer-title">Menu</h2>
+        <div class="viewer__actions">
+          <a class="btn btn--outline btn--small" id="viewer-tab" target="_blank" rel="noopener">Open in new tab</a>
+          <a class="btn btn--gold btn--small" id="viewer-download">Download PDF</a>
+          <button class="close" id="viewer-close" type="button" aria-label="Close viewer">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+          </button>
+        </div>
+      </header>
+      <iframe class="viewer__frame" id="viewer-frame" title="Menu PDF"></iframe>
+    </dialog>
     <script type="module" src="/src/staff/main.ts"></script>
   </body>
 </html>

@@ -54,4 +54,33 @@ document.querySelector("#signout")!.addEventListener("click", async () => {
   show(null);
 });
 
+// View opens the PDF in a modal; Ctrl or Cmd click still opens a new tab.
+const viewer = document.querySelector<HTMLDialogElement>("#viewer")!;
+const frame = document.querySelector<HTMLIFrameElement>("#viewer-frame")!;
+const viewerTitle = document.querySelector<HTMLElement>("#viewer-title")!;
+const viewerTab = document.querySelector<HTMLAnchorElement>("#viewer-tab")!;
+const viewerDownload = document.querySelector<HTMLAnchorElement>("#viewer-download")!;
+
+document.querySelectorAll<HTMLAnchorElement>("[data-view]").forEach((link) => {
+  link.addEventListener("click", (event) => {
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
+    event.preventDefault();
+    const url = `/api/staff/menu?name=${link.dataset.view}`;
+    viewerTitle.textContent = link.dataset.title ?? "Menu";
+    viewerTab.href = url;
+    viewerDownload.href = `${url}&download=1`;
+    frame.src = url;
+    viewer.showModal();
+  });
+});
+
+const closeViewer = () => viewer.close();
+document.querySelector("#viewer-close")!.addEventListener("click", closeViewer);
+viewer.addEventListener("click", (event) => {
+  if (event.target === viewer) closeViewer();
+});
+viewer.addEventListener("close", () => {
+  frame.removeAttribute("src");
+});
+
 void checkSession();
