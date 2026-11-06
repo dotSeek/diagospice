@@ -50,11 +50,17 @@ export const deals = (category: DealCategory): string => {
   return `<section class="block">${title(category.label)}<div class="deals">${cards}</div></section>`;
 };
 
+// Photos are real <img> elements with object-fit, never CSS background images. Chrome writes
+// backgrounds into the PDF as repeating tiles, and some viewers (WhatsApp and iOS Quick Look)
+// draw a sliver of the next tile, so the photo looks doubled. An image is drawn exactly once.
+const photoLayer = (image: string, shade: string): string =>
+  `<img class="ph" src="${photo(image)}" alt=""><span class="shade" style="background:${shade}"></span>`;
+
 export const band = (image: string, kicker: string, heading: string): string =>
-  `<header class="band" style="background-image:linear-gradient(180deg,rgba(17,13,11,.1) 0%,rgba(17,13,11,.3) 45%,rgba(17,13,11,.92) 100%),url(${photo(image)})"><p class="script">${escapeHtml(kicker)}</p><h1 class="gold">${escapeHtml(heading)}</h1></header>`;
+  `<header class="band">${photoLayer(image, "linear-gradient(180deg,rgba(17,13,11,.1) 0%,rgba(17,13,11,.3) 45%,rgba(17,13,11,.92) 100%)")}<p class="script">${escapeHtml(kicker)}</p><h1 class="gold">${escapeHtml(heading)}</h1></header>`;
 
 export const strip = (...images: string[]): string =>
-  `<div class="strip" style="margin-top:0">${images.map((image) => `<div style="background-image:url(${photo(image)})"></div>`).join("")}</div>`;
+  `<div class="strip" style="margin-top:0">${images.map((image) => `<div><img class="ph" src="${photo(image)}" alt=""></div>`).join("")}</div>`;
 
 const foot = (n: number): string =>
   `<footer class="foot"><span>${restaurant.name} | ${restaurant.addressInline}</span><span>${restaurant.phoneDisplay}</span><span class="pn">${n}</span></footer>`;
@@ -90,8 +96,9 @@ export const buffetPage = (n: number, buffet: BuffetInfo): string =>
   <div class="fb"><img src="${facebookQr}" alt="Facebook QR code"><span>Follow us on Facebook<br><b style="color:#f0a83a">${restaurant.facebookName}</b></span></div>`,
   );
 
-export const coverBackground = (image = "hero"): string =>
-  `linear-gradient(180deg,rgba(17,13,11,.85) 0%,rgba(17,13,11,.3) 32%,rgba(17,13,11,.45) 55%,rgba(17,13,11,.97) 80%),url(${photo(image)})`;
+/** Full page cover photo with its dark shade, placed as the first child of the cover frame. */
+export const coverPhoto = (image = "hero"): string =>
+  photoLayer(image, "linear-gradient(180deg,rgba(17,13,11,.85) 0%,rgba(17,13,11,.3) 32%,rgba(17,13,11,.45) 55%,rgba(17,13,11,.97) 80%)");
 
 const baseStyles = `
 @font-face{font-family:Playfair;src:url(${fileUrl("node_modules/@fontsource-variable/playfair-display/files/playfair-display-latin-wght-normal.woff2")});font-weight:400 900}
@@ -112,7 +119,10 @@ main{flex:1;min-height:0;display:flex;flex-direction:column}
 .dia{display:inline-block;flex:none;width:2mm;height:2mm;background:#c4060c;box-shadow:0 0 0 .45mm #f0a83a;border-radius:.3mm;transform:rotate(45deg)}
 .foot{display:flex;justify-content:space-between;align-items:center;gap:4mm;margin-top:3mm;padding-top:2.2mm;border-top:.25mm solid rgba(240,168,58,.35);font-size:6.8pt;color:rgba(243,230,204,.75)}
 .pn{display:grid;place-items:center;width:5.5mm;height:5.5mm;border-radius:50%;background:linear-gradient(180deg,#fde4ab,#f0a83a 58%,#c9801f);color:#1a1411;font-weight:700}
-.band{height:56mm;border-radius:2.5mm;background-size:cover;background-position:center;display:flex;flex-direction:column;justify-content:flex-end;padding:4mm 6mm;border:.25mm solid rgba(240,168,58,.45);margin-bottom:5mm;flex:none}
+.band{position:relative;overflow:hidden;height:56mm;border-radius:2.5mm;display:flex;flex-direction:column;justify-content:flex-end;padding:4mm 6mm;border:.25mm solid rgba(240,168,58,.45);margin-bottom:5mm;flex:none;background:#110d0b}
+.ph{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;display:block}
+.shade{position:absolute;inset:0}
+.band>p,.band>h1{position:relative}
 .band .script{font-size:22pt;margin-bottom:.5mm}
 .band h1{font-family:Playfair,serif;font-weight:700;font-size:34pt;line-height:1;text-transform:uppercase;letter-spacing:-.3mm}
 .title{display:flex;align-items:center;justify-content:center;gap:4mm;font-family:Playfair,serif;font-style:italic;font-weight:700;font-size:17pt;line-height:1.1;text-transform:uppercase;color:#f8d596;margin-bottom:5mm}
@@ -140,7 +150,9 @@ main{flex:1;min-height:0;display:flex;flex-direction:column}
 .order small{display:block;font-family:Bitter,serif;font-weight:400;font-size:6.3pt;letter-spacing:.25mm;text-transform:uppercase;color:#f0a83a}
 .spacer{flex:1}
 .cover{padding:0;background:#110d0b}
-.cover .frame{border-radius:0;border-width:0;box-shadow:inset 0 0 0 5mm #110d0b,inset 0 0 0 5.6mm #f0a83a,inset 0 0 0 6.8mm rgba(17,13,11,.4),inset 0 0 0 7.05mm rgba(240,168,58,.5);background-size:cover;background-position:center;padding:11mm 12mm 11mm;justify-content:space-between;text-align:center}
+.cover .frame{position:relative;overflow:hidden;border-radius:0;border-width:0;box-shadow:none;background:#110d0b;padding:11mm 12mm 11mm;justify-content:space-between;text-align:center}
+.cover .frame>*:not(.ph):not(.shade){position:relative;z-index:1}
+.cover .frame::after{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;box-shadow:inset 0 0 0 5mm #110d0b,inset 0 0 0 5.6mm #f0a83a,inset 0 0 0 6.8mm rgba(17,13,11,.4),inset 0 0 0 7.05mm rgba(240,168,58,.5)}
 .cover-logo{width:64mm;margin:0 auto;filter:drop-shadow(0 2mm 4mm rgba(0,0,0,.6))}
 .cover .script{font-size:30pt}
 .cover h1{font-family:Playfair,serif;font-weight:700;font-size:78pt;line-height:.92;text-transform:uppercase;letter-spacing:-1mm;filter:drop-shadow(0 1mm 2mm rgba(0,0,0,.6))}
@@ -192,7 +204,7 @@ main{flex:1;min-height:0;display:flex;flex-direction:column}
 .fb{display:flex;align-items:center;gap:3mm;margin-top:auto;padding-top:3mm;font-size:8pt}
 .fb img{width:18mm;background:#fff;padding:1mm;border-radius:1mm}
 .strip{display:grid;grid-template-columns:repeat(3,1fr);gap:2.5mm;margin-top:5mm}
-.strip div{height:34mm;border-radius:2.5mm;background-size:cover;background-position:center;border:.25mm solid rgba(240,168,58,.45)}
+.strip div{position:relative;overflow:hidden;height:34mm;border-radius:2.5mm;border:.25mm solid rgba(240,168,58,.45);background:#110d0b}
 `;
 
 export type PaperFormat = "B5" | "A4";

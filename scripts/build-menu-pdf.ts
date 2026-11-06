@@ -11,7 +11,7 @@ import QRCode from "qrcode";
 import { buffet, categoryById, delivery } from "../src/data/menu.ts";
 import type { DealCategory, ItemCategory } from "../src/data/menu.ts";
 import { restaurant } from "../src/data/restaurant.ts";
-import { band, block, buffetPage, coverBackground, deals, escapeHtml, htmlDocument, logo, page, renderPdf, root, strip } from "./menu-pdf-kit.ts";
+import { band, block, buffetPage, coverPhoto, deals, escapeHtml, htmlDocument, logo, page, renderPdf, root, strip } from "./menu-pdf-kit.ts";
 
 const cat = (id: string): ItemCategory => categoryById(id) as ItemCategory;
 
@@ -39,7 +39,7 @@ const orderRow = `<div class="order">
   <span><small>Online</small>${restaurant.websiteDisplay}</span>
 </div>`;
 
-const cover = `<div class="page cover"><div class="frame" style="background-image:${coverBackground()}">
+const cover = `<div class="page cover"><div class="frame">${coverPhoto()}
   <img class="cover-logo" src="${logo}" alt="${restaurant.name} logo">
   <div>
     <p class="script">Welcome to Diago Spice</p>

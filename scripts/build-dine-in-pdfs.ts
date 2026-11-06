@@ -16,7 +16,7 @@ import { join } from "node:path";
 import { buffet, formatPrice } from "../src/data/menu.ts";
 import type { DealCategory, ItemCategory } from "../src/data/menu.ts";
 import { restaurant } from "../src/data/restaurant.ts";
-import { band, block, buffetPage, coverBackground, deals, facebookQr, htmlDocument, logo, page, renderPdf, root, strip } from "./menu-pdf-kit.ts";
+import { band, block, buffetPage, coverPhoto, deals, facebookQr, htmlDocument, logo, page, renderPdf, root, strip } from "./menu-pdf-kit.ts";
 
 if (!existsSync(join(root, "private", "data", "restaurantMenu.ts"))) {
   console.error("Missing private/data/*.ts. The dine in menu data is kept off git, see private/README.md.");
@@ -59,7 +59,7 @@ const infoRow = `<div class="order">
   <span><small>Online</small>${restaurant.websiteDisplay}</span>
 </div>`;
 
-const cover = (heading: string, sub: string, chips: string[], image: string, headingSize?: string) => `<div class="page cover"><div class="frame" style="background-image:${coverBackground(image)}">
+const cover = (heading: string, sub: string, chips: string[], image: string, headingSize?: string) => `<div class="page cover"><div class="frame">${coverPhoto(image)}
   <img class="cover-logo" src="${logo}" alt="${restaurant.name} logo">
   <div>
     <p class="script">Welcome to Diago Spice</p>
