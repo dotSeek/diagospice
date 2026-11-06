@@ -8,7 +8,9 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --port 3200",
     "typecheck": "tsc --noEmit",
-    "menu:pdf": "node scripts/build-menu-pdf.ts && node scripts/build-share-pages.ts"
+    "menu:pdf": "node scripts/build-menu-pdf.ts && node scripts/build-share-pages.ts",
+    "menu:dine-in": "node scripts/build-dine-in-pdfs.ts",
+    "staff:credentials": "node scripts/create-staff-credentials.ts"
   },
   "dependencies": {
     "@fontsource-variable/bitter": "^5.3.0",

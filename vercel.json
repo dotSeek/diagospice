@@ -2,6 +2,25 @@
   "redirects": [
     { "source": "/bar-menu", "destination": "/menu/", "permanent": true },
     { "source": "/bar-menu/", "destination": "/menu/", "permanent": true },
-    { "source": "/diago-spice-bar-menu.pdf", "destination": "/diago-spice-menu.pdf", "permanent": true }
+    { "source": "/diago-spice-bar-menu.pdf", "destination": "/diago-spice-menu.pdf", "permanent": true },
+    { "source": "/staff", "destination": "/staff/", "permanent": true }
+  ],
+  "functions": {
+    "api/staff/menu.ts": { "includeFiles": "private/encrypted/**" }
+  },
+  "headers": [
+    {
+      "source": "/staff/(.*)",
+      "headers": [
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow" },
+        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "Referrer-Policy", "value": "same-origin" },
+        { "key": "Cache-Control", "value": "no-store" }
+      ]
+    },
+    {
+      "source": "/api/staff/(.*)",
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
+    }
   ]
 }

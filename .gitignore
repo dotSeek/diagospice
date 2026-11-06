@@ -5,3 +5,9 @@ dist
 .claude/
 DESIGN.md
 SKILL.md
+# Secrets and in house menus (see private/README.md)
+.env
+.env.*
+!.env.example
+private/data/
+private/menus/

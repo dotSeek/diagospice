@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="theme-color" content="#1A1411" />
+    <title>Staff menus | Diago Spice</title>
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+  </head>
+  <body>
+    <main class="staff" id="app">
+      <img class="staff__logo" src="/brand/logo.webp" alt="Diago Spice logo" width="640" height="731" />
+      <p class="script">Staff area</p>
+      <h1 class="staff__title">In house menus</h1>
+
+      <form class="card" id="login" hidden novalidate>
+        <p class="card__lead">Sign in to view and download the restaurant and bar menus.</p>
+        <label>Username<input name="username" autocomplete="username" required /></label>
+        <label>Password<input name="password" type="password" autocomplete="current-password" required /></label>
+        <p class="error" id="login-error" role="alert"></p>
+        <button class="btn btn--red" type="submit">Sign in</button>
+      </form>
+
+      <section class="card" id="menus" hidden>
+        <p class="card__lead">Signed in as <strong id="who"></strong>. For in house use only, please do not share these files.</p>
+        <div class="menus">
+          <article class="menu-card">
+            <h2>Restaurant menu</h2>
+            <p>Dine in prices, A4, 8 pages</p>
+            <a class="btn btn--gold" href="/api/staff/menu?name=restaurant" target="_blank" rel="noopener">View</a>
+            <a class="btn btn--outline" href="/api/staff/menu?name=restaurant&amp;download=1">Download PDF</a>
+          </article>
+          <article class="menu-card">
+            <h2>Bar menu</h2>
+            <p>Dine in prices, A4, 7 pages</p>
+            <a class="btn btn--gold" href="/api/staff/menu?name=bar" target="_blank" rel="noopener">View</a>
+            <a class="btn btn--outline" href="/api/staff/menu?name=bar&amp;download=1">Download PDF</a>
+          </article>
+        </div>
+        <button class="btn btn--outline signout" id="signout" type="button">Sign out</button>
+      </section>
+
+      <p class="staff__back"><a href="/">Back to the website</a></p>
+    </main>
+    <script type="module" src="/src/staff/main.ts"></script>
+  </body>
+</html>
