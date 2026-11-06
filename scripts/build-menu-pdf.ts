@@ -37,9 +37,8 @@ const deliveryBand = `<div class="delivery">
   <p class="d-min">Minimum order ${escapeHtml(delivery.minimumOrder)}</p>
 </div>`;
 
-const orderRow = `<div class="order">
-  <span><small>Call to order</small>${restaurant.phoneDisplay}</span>
-  <span><small>WhatsApp</small>${restaurant.phoneDisplay}</span>
+const orderRow = `<div class="order order--two">
+  <span><small>Call or WhatsApp</small>${restaurant.phoneDisplay}</span>
   <span><small>Online</small>${restaurant.websiteDisplay}</span>
 </div>`;
 
@@ -182,6 +181,8 @@ const triCss = `
 .cover .d-min{padding:.3mm 3mm}
 .order{gap:1.6mm;margin-top:2.2mm}
 .order span{font-size:7.6pt;padding:1.3mm 1mm}
+.order--two{grid-template-columns:1fr 1fr}
+.order--two span{font-size:9pt;padding:1.5mm 1mm;white-space:nowrap}
 .order small{font-size:5.4pt}
 `;
 
