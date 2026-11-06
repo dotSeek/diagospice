@@ -37,7 +37,9 @@ Admin routes need the signed admin cookie, same origin and JSON. The staff role 
 
 ### 4. Admin dashboard (`/staff/`, admin only)
 - **Menus and offers** editor (`src/staff/ContentEditor.tsx`): tabs for Delivery, Restaurant, Bar;
-  price editing for every row; offers with on/off, title, offer, description, discounted items with
+  menu items per section (change a price, add a new dish, drink or deal, edit its name and note, remove it;
+  renaming or removing an item keeps offers in step; the server refuses duplicate names, names over
+  60 characters, `<` or `>`, and deals with nothing listed); weekend buffet details; offers with on/off, title, offer, description, discounted items with
   live regular price, conditions, optional start and end dates, source; live "why hidden" checks;
   Save draft, Preview draft, Publish, Discard draft.
 - **Table QR codes** (`src/staff/qrAdmin.ts`): previews, Download print PDF (A6 card + A4 poster),

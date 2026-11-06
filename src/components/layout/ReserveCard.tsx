@@ -1,4 +1,4 @@
-import { buffet } from "../../data/menu";
+import { useBuffet } from "../../data/useContent";
 import { restaurant } from "../../data/restaurant";
 import { Artwork } from "../ui/Artwork";
 import { Button } from "../ui/Button";
@@ -13,6 +13,7 @@ interface ReserveCardProps {
 }
 
 export function ReserveCard({ open, onClose }: ReserveCardProps) {
+  const buffet = useBuffet();
   const ref = useDialog(open);
 
   return (

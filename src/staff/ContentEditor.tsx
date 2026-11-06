@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { OFFER_LABEL, PENDING, VENUES, VENUE_TITLE, menuPrices, offerProblems } from "../data/content";
-import type { MenuDoc, Offer, OfferItem, Venue } from "../data/content";
+import type { BuffetInfo, MenuDoc, Offer, Venue } from "../data/content";
 import { formatPrice } from "../data/menu";
 
-// Admin menu and offer editor. Changes are saved as a DRAFT; customers keep seeing the
-// published menu until "Publish" is pressed. The server re-checks every rule on save and publish.
+// Admin menu and offer editor. Every change is a DRAFT until "Publish" is pressed; customers keep
+// seeing the published menu. The server re-checks every rule on save and on publish.
 
 interface Loaded {
   storage: "redis" | "file" | "read-only";
@@ -13,44 +13,77 @@ interface Loaded {
   doc: MenuDoc;
 }
 
+type Msg = { kind: "ok" | "error"; text: string; problems?: string[] } | null;
+
 const previewUrl: Record<Venue, string> = {
   delivery: "/?preview=1#menu",
   restaurant: "/restaurant-menu/?preview=1",
   bar: "/bar-menu/?preview=1",
 };
 
+// One tap conditions per venue. Staff can still type their own.
+const QUICK_CONDITIONS: Record<Venue, string[]> = {
+  delivery: ["First delivery order only", "Delivery orders only", "One offer per order"],
+  restaurant: ["Dine in only", "One offer per table", "Not with other offers"],
+  bar: ["Bar only", "One offer per customer", "Not with other offers"],
+};
+
+const NEW_TITLE: Record<Venue, string> = { delivery: "First Order Special", restaurant: "Opening Special", bar: "Bar Opening Special" };
+const AUDIENCE: Record<Venue, string> = { delivery: "New delivery customers", restaurant: "Dine in customers", bar: "Bar customers" };
+const DEFAULT_CONDITION: Record<Venue, string> = { delivery: "Delivery orders only", restaurant: "Dine in only", bar: "Bar only" };
+
 const api = async (url: string, init?: RequestInit) => {
   const res = await fetch(url, { credentials: "same-origin", ...init, headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) } });
   const body = await res.json().catch(() => ({}));
-  if (!res.ok) throw Object.assign(new Error(body.error ?? "Request failed."), { problems: body.problems as string[] | undefined });
+  if (!res.ok) throw Object.assign(new Error(body.error ?? "Something went wrong."), { problems: body.problems as string[] | undefined });
   return body;
 };
 
 const when = (iso: string) => new Date(iso).toLocaleString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+const money = (value: string) => Math.round(parseFloat(value) * 100) / 100;
+
+/** Clears "waiting for confirmation" placeholders so nothing hides inside a field the admin cannot see. */
+const editable = (doc: MenuDoc): MenuDoc => {
+  const copy = structuredClone(doc);
+  for (const offer of copy.offers) {
+    if (offer.value === PENDING) offer.value = "";
+    if (offer.description === PENDING) offer.description = "";
+    if (offer.source === PENDING) offer.source = "";
+    offer.conditions = offer.conditions.filter((condition) => condition !== PENDING);
+  }
+  return copy;
+};
 
 export function ContentEditor() {
   const [venue, setVenue] = useState<Venue>("restaurant");
   const [loaded, setLoaded] = useState<Loaded | null>(null);
   const [doc, setDoc] = useState<MenuDoc | null>(null);
   const [dirty, setDirty] = useState(false);
-  const [message, setMessage] = useState<{ kind: "ok" | "error"; text: string; problems?: string[] } | null>(null);
+  const [message, setMessage] = useState<Msg>(null);
   const [busy, setBusy] = useState(false);
+  const [editing, setEditing] = useState<string | null>(null);
 
   const load = useCallback(async (target: Venue) => {
-    setMessage(null);
     const data = (await api(`/api/staff/content?venue=${target}`)) as Loaded;
     setLoaded(data);
-    setDoc(structuredClone(data.doc));
+    setDoc(editable(data.doc));
     setDirty(false);
   }, []);
 
   useEffect(() => {
+    setMessage(null);
+    setEditing(null);
     load(venue).catch((error) => setMessage({ kind: "error", text: error.message }));
   }, [venue, load]);
+
+  const prices = useMemo(() => (doc ? menuPrices(doc) : new Map<string, number>()), [doc]);
+
+  if (!doc || !loaded) return <p className="card__lead">{message?.text ?? "Loading menus..."}</p>;
 
   const change = (next: MenuDoc) => {
     setDoc(next);
     setDirty(true);
+    setMessage(null);
   };
 
   const run = async (label: string, action: () => Promise<unknown>) => {
@@ -68,245 +101,657 @@ export function ContentEditor() {
     }
   };
 
-  const save = () => run("Draft saved. Preview it, then publish when ready.", () => api(`/api/staff/content?venue=${venue}`, { method: "PUT", body: JSON.stringify(doc) }));
+  const save = () => run("Draft saved. Preview it, then publish when you are happy.", () => api(`/api/staff/content?venue=${venue}`, { method: "PUT", body: JSON.stringify(doc) }));
   const publish = () => {
-    if (dirty) return setMessage({ kind: "error", text: "Save the draft first, then preview it." });
-    if (!window.confirm(`Publish the ${VENUE_TITLE[venue].toLowerCase()}? Customers will see it straight away.`)) return;
-    void run("Published. The QR menu and website now show this version.", () => api(`/api/staff/publish?venue=${venue}`, { method: "POST" }));
+    if (!window.confirm(`Publish the ${VENUE_TITLE[venue].toLowerCase()} now? Customers will see it within a minute.`)) return;
+    void run("Published. The website and QR menu now show this version.", () => api(`/api/staff/publish?venue=${venue}`, { method: "POST" }));
   };
   const discard = () => {
     if (!window.confirm("Throw away the draft and go back to the published menu?")) return;
     void run("Draft discarded.", () => api(`/api/staff/discard?venue=${venue}`, { method: "POST" }));
   };
-
   const switchVenue = (next: Venue) => {
     if (dirty && !window.confirm("You have unsaved changes. Leave without saving?")) return;
     setVenue(next);
   };
 
-  const prices = useMemo(() => (doc ? menuPrices(doc) : new Map<string, number>()), [doc]);
-
-  if (!doc || !loaded) return <p className="card__lead">{message?.text ?? "Loading menus..."}</p>;
-
-  const setPrice = (categoryIndex: number, rowIndex: number, value: string) => {
-    const next = structuredClone(doc);
-    const category = next.categories[categoryIndex];
-    const price = Math.round(parseFloat(value) * 100) / 100;
-    if (category.kind === "items") category.items[rowIndex].price = price;
-    else category.deals[rowIndex].price = price;
-    // keep offer regular prices in step with the menu
-    for (const offer of next.offers) for (const item of offer.items) if (item.name === (category.kind === "items" ? category.items[rowIndex].name : category.deals[rowIndex].name)) item.originalPrice = price;
-    change(next);
-  };
-
-  const setOffer = (index: number, patch: Partial<Offer>) => {
-    const next = structuredClone(doc);
-    next.offers[index] = { ...next.offers[index], ...patch };
-    change(next);
-  };
+  const updateOffer = (id: string, patch: Partial<Offer>) =>
+    change({ ...doc, offers: doc.offers.map((offer) => (offer.id === id ? { ...offer, ...patch } : offer)) });
 
   const addOffer = () => {
-    const next = structuredClone(doc);
-    next.offers.push({
-      id: `offer-${Date.now()}`,
-      title: venue === "bar" ? "Bar Opening Special" : venue === "restaurant" ? "Opening Special" : "First Order Special",
-      venue,
-      audience: venue === "bar" ? "Bar customers" : venue === "restaurant" ? "Dine in customers" : "New delivery customers",
-      description: "",
-      value: "",
-      items: [],
-      conditions: venue === "restaurant" ? ["Dine in only"] : venue === "bar" ? ["Bar only"] : [],
-      active: false,
-      source: "",
+    const id = `offer-${Date.now()}`;
+    change({
+      ...doc,
+      offers: [
+        ...doc.offers,
+        { id, title: NEW_TITLE[venue], venue, audience: AUDIENCE[venue], description: "", value: "", items: [], conditions: [DEFAULT_CONDITION[venue]], active: false, source: "" },
+      ],
     });
+    setEditing(id);
+  };
+
+  const removeOffer = (offer: Offer) => {
+    if (!window.confirm(`Remove "${offer.title}"? It disappears for customers once you save and publish.`)) return;
+    change({ ...doc, offers: doc.offers.filter((entry) => entry.id !== offer.id) });
+    if (editing === offer.id) setEditing(null);
+  };
+
+  /** Menu edits (prices, names, new or removed items) also keep every offer in step. */
+  const changeMenu = (categories: MenuDoc["categories"], renamed?: { from: string; to: string }, removed?: string) => {
+    const next = { ...structuredClone(doc), categories };
+    const latest = menuPrices(next);
+    for (const offer of next.offers) {
+      if (removed) offer.items = offer.items.filter((item) => item.name !== removed);
+      for (const item of offer.items) {
+        if (renamed && item.name === renamed.from) item.name = renamed.to;
+        const price = latest.get(item.name);
+        if (price !== undefined) item.originalPrice = price;
+      }
+    }
     change(next);
   };
 
-  const removeOffer = (index: number) => {
-    if (!window.confirm("Remove this offer from the draft?")) return;
-    const next = structuredClone(doc);
-    next.offers.splice(index, 1);
-    change(next);
-  };
+  const state = dirty ? "unsaved" : loaded.hasDraft ? "draft" : "live";
 
   return (
     <div className="editor">
       <div className="editor__tabs" role="tablist" aria-label="Menus">
         {VENUES.map((entry) => (
-          <button key={entry} type="button" role="tab" aria-selected={entry === venue} className={`btn ${entry === venue ? "btn--gold" : "btn--outline"}`} onClick={() => switchVenue(entry)}>
+          <button key={entry} type="button" role="tab" aria-selected={entry === venue} className={`tabbtn${entry === venue ? " is-on" : ""}`} onClick={() => switchVenue(entry)}>
             {VENUE_TITLE[entry]}
           </button>
         ))}
       </div>
 
       {loaded.storage === "read-only" ? (
-        <p className="editor__warn">Storage is not connected yet, so changes cannot be saved. Add Upstash Redis to the Vercel project (see docs/diago-website-implementation-report.md).</p>
+        <p className="editor__warn">Saving is switched off until Upstash Redis is connected to the Vercel project. You can look around, but changes cannot be saved yet.</p>
       ) : null}
-      <p className="editor__status">
-        Published {when(loaded.publishedUpdated)}. {loaded.hasDraft ? <b>A draft is waiting to be published.</b> : "No draft."} {dirty ? <b>Unsaved changes.</b> : null}
-      </p>
 
-      {message ? (
-        <div className={`editor__msg editor__msg--${message.kind}`} role={message.kind === "error" ? "alert" : "status"}>
-          <p>{message.text}</p>
-          {message.problems?.length ? (
-            <ul>
-              {message.problems.map((problem) => (
-                <li key={problem}>{problem}</li>
-              ))}
-            </ul>
-          ) : null}
+      {/* Offers */}
+      <section className="ed-section" aria-labelledby="offers-h">
+        <div className="ed-section__head">
+          <h3 id="offers-h">{venue === "delivery" ? "Delivery offers" : venue === "bar" ? "Bar opening offers" : "Restaurant opening offers"}</h3>
+          <button type="button" className="btn btn--gold btn--small" onClick={addOffer}>
+            + Add new offer
+          </button>
         </div>
-      ) : null}
+        <p className="editor__hint">
+          These only ever appear on the {VENUE_TITLE[venue].toLowerCase()}, marked "{OFFER_LABEL[venue]}". Only enter offers the business has confirmed.
+        </p>
+        {doc.offers.length === 0 ? <p className="ed-empty">No offers yet. Press "Add new offer" to create one.</p> : null}
+        <div className="offer-cards">
+          {doc.offers.map((offer) => (
+            <OfferCard
+              key={offer.id}
+              offer={offer}
+              doc={doc}
+              prices={prices}
+              open={editing === offer.id}
+              onToggleOpen={() => setEditing(editing === offer.id ? null : offer.id)}
+              onChange={(patch) => updateOffer(offer.id, patch)}
+              onRemove={() => removeOffer(offer)}
+            />
+          ))}
+        </div>
+      </section>
 
-      <div className="editor__actions">
-        <button type="button" className="btn btn--gold" disabled={busy || !dirty} onClick={save}>
-          Save draft
-        </button>
-        <a className="btn btn--outline" href={previewUrl[venue]} target="_blank" rel="noopener">
-          Preview draft
-        </a>
-        <button type="button" className="btn btn--red" disabled={busy || !loaded.hasDraft || dirty} onClick={publish}>
-          Publish
-        </button>
-        <button type="button" className="btn btn--outline" disabled={busy || !loaded.hasDraft} onClick={discard}>
-          Discard draft
-        </button>
-      </div>
+      {/* Weekend buffet (restaurant only) */}
+      {venue === "restaurant" && doc.buffet ? <BuffetEditor buffet={doc.buffet} onChange={(buffet) => change({ ...doc, buffet })} /> : null}
 
-      <h3 className="editor__h">{venue === "delivery" ? "First order and delivery offers" : venue === "bar" ? "Bar opening offers" : "Restaurant opening offers"}</h3>
-      <p className="editor__hint">
-        Only fill in offers the business has confirmed. An offer shows to customers only when it is switched on, every field is filled, each item's offer price is below its menu price, and it is in date. {OFFER_LABEL[venue]} offers only ever appear on the {VENUE_TITLE[venue].toLowerCase()}.
-      </p>
-      {doc.offers.map((offer, index) => {
-        const problems = offerProblems(offer, doc);
-        return (
-          <fieldset className="offer-edit" key={offer.id}>
-            <legend>
-              {offer.title || "Untitled offer"} {offer.active ? (problems.length ? <span className="tag tag--warn">On, but hidden</span> : <span className="tag tag--live">Live when published</span>) : <span className="tag">Off</span>}
-            </legend>
-            <label className="row">
-              <input type="checkbox" checked={offer.active} onChange={(event) => setOffer(index, { active: event.target.checked })} /> Show this offer to customers
-            </label>
-            <label>
-              Title
-              <input value={offer.title} onChange={(event) => setOffer(index, { title: event.target.value })} />
-            </label>
-            <label>
-              Offer (what the customer gets)
-              <input value={offer.value === PENDING ? "" : offer.value} placeholder={PENDING} onChange={(event) => setOffer(index, { value: event.target.value })} />
-            </label>
-            <label>
-              Description
-              <textarea rows={2} value={offer.description === PENDING ? "" : offer.description} placeholder={PENDING} onChange={(event) => setOffer(index, { description: event.target.value })} />
-            </label>
-            <div className="offer-items">
-              <p>Discounted {venue === "bar" ? "drinks and items" : "dishes"} {venue === "delivery" ? "(optional for whole order offers)" : ""}</p>
-              {offer.items.map((item, itemIndex) => (
-                <div className="offer-item" key={`${item.name}-${itemIndex}`}>
-                  <select
-                    value={item.name}
-                    aria-label="Menu item"
-                    onChange={(event) => {
-                      const items = [...offer.items];
-                      items[itemIndex] = { ...item, name: event.target.value, originalPrice: prices.get(event.target.value) ?? 0 };
-                      setOffer(index, { items });
-                    }}
-                  >
-                    {[...prices.keys()].map((name) => (
-                      <option key={name} value={name}>
-                        {name}
-                      </option>
-                    ))}
-                  </select>
-                  <span className="offer-item__was">was {formatPrice(item.originalPrice)}</span>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    aria-label={`Offer price for ${item.name}`}
-                    value={Number.isFinite(item.offerPrice) ? item.offerPrice : ""}
-                    onChange={(event) => {
-                      const items = [...offer.items];
-                      items[itemIndex] = { ...item, offerPrice: Math.round(parseFloat(event.target.value) * 100) / 100 };
-                      setOffer(index, { items });
-                    }}
-                  />
-                  <button type="button" className="btn btn--outline btn--small" onClick={() => setOffer(index, { items: offer.items.filter((_, i) => i !== itemIndex) })}>
-                    Remove
-                  </button>
-                </div>
-              ))}
-              <button
-                type="button"
-                className="btn btn--outline btn--small"
-                onClick={() => {
-                  const first = [...prices.keys()][0];
-                  const item: OfferItem = { name: first, originalPrice: prices.get(first) ?? 0, offerPrice: NaN };
-                  setOffer(index, { items: [...offer.items, item] });
-                }}
-              >
-                Add item
-              </button>
-            </div>
-            <label>
-              Conditions (one per line)
-              <textarea
-                rows={3}
-                value={offer.conditions.filter((c) => c !== PENDING).join("\n")}
-                placeholder={PENDING}
-                onChange={(event) => setOffer(index, { conditions: event.target.value.split("\n").map((c) => c.trim()).filter(Boolean) })}
-              />
-            </label>
-            <div className="dates">
-              <label>
-                Starts (optional)
-                <input type="date" value={offer.starts ?? ""} onChange={(event) => setOffer(index, { starts: event.target.value || undefined })} />
-              </label>
-              <label>
-                Ends (optional)
-                <input type="date" value={offer.expires ?? ""} onChange={(event) => setOffer(index, { expires: event.target.value || undefined })} />
-              </label>
-            </div>
-            <label>
-              Confirmed by (source)
-              <input value={offer.source === PENDING ? "" : offer.source} placeholder="For example: Owner, WhatsApp 6 Nov 2026" onChange={(event) => setOffer(index, { source: event.target.value })} />
-            </label>
-            {problems.length ? (
-              <ul className="offer-problems" aria-label="Why this offer is hidden">
-                {problems.map((problem) => (
+      {/* Prices */}
+      <MenuItemsEditor doc={doc} onChange={changeMenu} />
+
+      {/* Save and publish bar */}
+      <div className={`ed-bar ed-bar--${state}`} role="region" aria-label="Save and publish">
+        <p className="ed-bar__state">
+          {state === "unsaved" ? (
+            <>
+              <b>Unsaved changes.</b> Save a draft to keep them.
+            </>
+          ) : state === "draft" ? (
+            <>
+              <b>Draft saved, not live yet.</b> Preview it, then publish.
+            </>
+          ) : (
+            <>
+              <b>Up to date.</b> Customers see the version published {when(loaded.publishedUpdated)}.
+            </>
+          )}
+        </p>
+        {message ? (
+          <div className={`editor__msg editor__msg--${message.kind}`} role={message.kind === "error" ? "alert" : "status"}>
+            <p>{message.text}</p>
+            {message.problems?.length ? (
+              <ul>
+                {message.problems.map((problem) => (
                   <li key={problem}>{problem}</li>
                 ))}
               </ul>
             ) : null}
-            <button type="button" className="btn btn--outline btn--small" onClick={() => removeOffer(index)}>
-              Remove offer
-            </button>
-          </fieldset>
+          </div>
+        ) : null}
+        <div className="editor__actions">
+          <button type="button" className="btn btn--gold" disabled={busy || !dirty || loaded.storage === "read-only"} onClick={save}>
+            Save draft
+          </button>
+          <a className={`btn btn--outline${!loaded.hasDraft || dirty ? " is-disabled" : ""}`} href={previewUrl[venue]} target="_blank" rel="noopener" aria-disabled={!loaded.hasDraft || dirty}>
+            Preview draft
+          </a>
+          <button type="button" className="btn btn--red" disabled={busy || !loaded.hasDraft || dirty} onClick={publish}>
+            Publish
+          </button>
+          <button type="button" className="btn btn--outline" disabled={busy || !loaded.hasDraft} onClick={discard}>
+            Discard draft
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---------- one offer: summary card that opens into a guided form ----------
+
+function OfferCard({
+  offer,
+  doc,
+  prices,
+  open,
+  onToggleOpen,
+  onChange,
+  onRemove,
+}: {
+  offer: Offer;
+  doc: MenuDoc;
+  prices: Map<string, number>;
+  open: boolean;
+  onToggleOpen: () => void;
+  onChange: (patch: Partial<Offer>) => void;
+  onRemove: () => void;
+}) {
+  const problems = offerProblems(offer, doc);
+  const ready = problems.length === 0;
+  const status = !offer.active ? { cls: "off", text: "Hidden" } : ready ? { cls: "live", text: "Shows when published" } : { cls: "warn", text: "Needs details" };
+
+  return (
+    <article className={`offer-card${open ? " is-open" : ""}`}>
+      <header className="offer-card__head">
+        <div>
+          <span className={`pill pill--${status.cls}`}>{status.text}</span>
+          <h4>{offer.title || "Untitled offer"}</h4>
+          <p className="offer-card__sum">
+            {offer.value || "No offer text yet"}
+            {offer.items.length ? ` · ${offer.items.map((item) => `${item.name} ${formatPrice(item.offerPrice || 0)}`).join(", ")}` : ""}
+          </p>
+        </div>
+        <div className="offer-card__btns">
+          <label className="switch" title="Show this offer to customers">
+            <input type="checkbox" checked={offer.active} onChange={(event) => onChange({ active: event.target.checked })} aria-label={`Show ${offer.title} to customers`} />
+            <span aria-hidden="true" />
+            <em>{offer.active ? "On" : "Off"}</em>
+          </label>
+          <button type="button" className="btn btn--outline btn--small" onClick={onToggleOpen} aria-expanded={open}>
+            {open ? "Close" : "Edit"}
+          </button>
+          <button type="button" className="btn btn--outline btn--small btn--danger" onClick={onRemove}>
+            Remove
+          </button>
+        </div>
+      </header>
+
+      {open ? (
+        <div className="offer-form">
+          <div className="step">
+            <span className="step__n">1</span>
+            <div className="step__body">
+              <label>
+                Offer name
+                <input value={offer.title} onChange={(event) => onChange({ title: event.target.value })} placeholder={NEW_TITLE[offer.venue]} />
+              </label>
+              <label>
+                What the customer gets
+                <input value={offer.value} onChange={(event) => onChange({ value: event.target.value })} placeholder="For example: Grand opening prices on two house favourites" />
+              </label>
+              <label>
+                Short description (optional)
+                <textarea rows={2} value={offer.description} onChange={(event) => onChange({ description: event.target.value })} />
+              </label>
+            </div>
+          </div>
+
+          <div className="step">
+            <span className="step__n">2</span>
+            <div className="step__body">
+              <p className="step__title">{offer.venue === "bar" ? "Drinks and items on offer" : "Dishes on offer"}{offer.venue === "delivery" ? " (optional)" : ""}</p>
+              <ItemPicker prices={prices} taken={offer.items.map((item) => item.name)} onPick={(name) => onChange({ items: [...offer.items, { name, originalPrice: prices.get(name) ?? 0, offerPrice: NaN }] })} />
+              {offer.items.length ? (
+                <ul className="picked">
+                  {offer.items.map((item, index) => {
+                    const valid = item.offerPrice > 0 && item.offerPrice < item.originalPrice;
+                    const saving = valid ? item.originalPrice - item.offerPrice : 0;
+                    return (
+                      <li key={item.name}>
+                        <span className="picked__name">{item.name}</span>
+                        <span className="picked__was">Regular {formatPrice(item.originalPrice)}</span>
+                        <label className="picked__price">
+                          Offer £
+                          <input
+                            type="number"
+                            inputMode="decimal"
+                            step="0.01"
+                            min="0"
+                            value={Number.isFinite(item.offerPrice) ? item.offerPrice : ""}
+                            aria-label={`Offer price for ${item.name}`}
+                            onChange={(event) => onChange({ items: offer.items.map((entry, i) => (i === index ? { ...entry, offerPrice: money(event.target.value) } : entry)) })}
+                          />
+                        </label>
+                        <span className={`picked__save${valid ? "" : " is-bad"}`}>
+                          {Number.isFinite(item.offerPrice) ? (valid ? `Save ${formatPrice(saving)} (${Math.round((saving / item.originalPrice) * 100)}% off)` : "Must be below the regular price") : "Enter the offer price"}
+                        </span>
+                        <button type="button" className="icon-btn" aria-label={`Remove ${item.name}`} onClick={() => onChange({ items: offer.items.filter((_, i) => i !== index) })}>
+                          ×
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              ) : null}
+            </div>
+          </div>
+
+          <div className="step">
+            <span className="step__n">3</span>
+            <div className="step__body">
+              <p className="step__title">Conditions</p>
+              <div className="chips">
+                {QUICK_CONDITIONS[offer.venue].map((condition) => {
+                  const on = offer.conditions.includes(condition);
+                  return (
+                    <button
+                      key={condition}
+                      type="button"
+                      className={`chipbtn${on ? " is-on" : ""}`}
+                      aria-pressed={on}
+                      onClick={() => onChange({ conditions: on ? offer.conditions.filter((c) => c !== condition) : [...offer.conditions, condition] })}
+                    >
+                      {on ? "✓ " : "+ "}
+                      {condition}
+                    </button>
+                  );
+                })}
+              </div>
+              <CustomConditions conditions={offer.conditions.filter((c) => !QUICK_CONDITIONS[offer.venue].includes(c))} onChange={(custom) => onChange({ conditions: [...offer.conditions.filter((c) => QUICK_CONDITIONS[offer.venue].includes(c)), ...custom] })} />
+              <div className="dates">
+                <label>
+                  Starts (optional)
+                  <input type="date" value={offer.starts ?? ""} onChange={(event) => onChange({ starts: event.target.value || undefined })} />
+                </label>
+                <label>
+                  Ends (optional)
+                  <input type="date" value={offer.expires ?? ""} onChange={(event) => onChange({ expires: event.target.value || undefined })} />
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div className="step">
+            <span className="step__n">4</span>
+            <div className="step__body">
+              <label>
+                Confirmed by (staff only, never shown to customers)
+                <input value={offer.source} onChange={(event) => onChange({ source: event.target.value })} placeholder="For example: Owner, 7 Nov 2026" />
+              </label>
+            </div>
+          </div>
+
+          {problems.length ? (
+            <div className="todo" role="status">
+              <p>{offer.active ? "Before customers can see this offer:" : "Still to do before switching it on:"}</p>
+              <ul>
+                {problems.map((problem) => (
+                  <li key={problem}>{problem}</li>
+                ))}
+              </ul>
+            </div>
+          ) : (
+            <p className="todo todo--ok">{offer.active ? "Ready. It shows to customers once you save and publish." : "Ready. Switch it On to show it to customers."}</p>
+          )}
+        </div>
+      ) : null}
+    </article>
+  );
+}
+
+/** Type to search the venue's menu, then click a result to add it. */
+function ItemPicker({ prices, taken, onPick }: { prices: Map<string, number>; taken: string[]; onPick: (name: string) => void }) {
+  const [query, setQuery] = useState("");
+  const matches = [...prices.entries()].filter(([name]) => !taken.includes(name) && name.toLowerCase().includes(query.trim().toLowerCase())).slice(0, 8);
+  return (
+    <div className="picker">
+      <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search the menu, for example Kottu" aria-label="Search the menu to add an item" />
+      {query.trim() ? (
+        <ul className="picker__list">
+          {matches.length ? (
+            matches.map(([name, price]) => (
+              <li key={name}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onPick(name);
+                    setQuery("");
+                  }}
+                >
+                  <span>{name}</span>
+                  <span>{formatPrice(price)}</span>
+                </button>
+              </li>
+            ))
+          ) : (
+            <li className="picker__none">Nothing on this menu matches "{query}".</li>
+          )}
+        </ul>
+      ) : null}
+    </div>
+  );
+}
+
+function CustomConditions({ conditions, onChange }: { conditions: string[]; onChange: (list: string[]) => void }) {
+  const [text, setText] = useState("");
+  const add = () => {
+    const value = text.trim();
+    if (!value || conditions.includes(value)) return;
+    onChange([...conditions, value]);
+    setText("");
+  };
+  return (
+    <div className="custom-conds">
+      {conditions.length ? (
+        <div className="chips">
+          {conditions.map((condition) => (
+            <span key={condition} className="chipbtn is-on">
+              {condition}
+              <button type="button" className="icon-btn" aria-label={`Remove condition ${condition}`} onClick={() => onChange(conditions.filter((c) => c !== condition))}>
+                ×
+              </button>
+            </span>
+          ))}
+        </div>
+      ) : null}
+      <div className="custom-conds__add">
+        <input
+          value={text}
+          onChange={(event) => setText(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Enter") {
+              event.preventDefault();
+              add();
+            }
+          }}
+          placeholder="Add your own condition"
+          aria-label="Add your own condition"
+        />
+        <button type="button" className="btn btn--outline btn--small" onClick={add}>
+          Add
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ---------- weekend buffet ----------
+
+function BuffetEditor({ buffet, onChange }: { buffet: BuffetInfo; onChange: (buffet: BuffetInfo) => void }) {
+  const set = (patch: Partial<BuffetInfo>) => onChange({ ...buffet, ...patch });
+  return (
+    <section className="ed-section" aria-labelledby="buffet-h">
+      <div className="ed-section__head">
+        <h3 id="buffet-h">Weekend buffet</h3>
+      </div>
+      <p className="editor__hint">Shown on the website, the restaurant QR menu and the leaflet. Dine in only.</p>
+      <div className="buffet-form">
+        <label>
+          Days
+          <input value={buffet.days} onChange={(event) => set({ days: event.target.value })} />
+        </label>
+        <label>
+          Hours
+          <input value={buffet.hours} onChange={(event) => set({ hours: event.target.value })} />
+        </label>
+        <label>
+          Adult price £
+          <input type="number" inputMode="decimal" step="0.01" min="0" value={buffet.adultPrice} onChange={(event) => set({ adultPrice: money(event.target.value) })} />
+        </label>
+        <label>
+          Kids price £
+          <input type="number" inputMode="decimal" step="0.01" min="0" value={buffet.kidsPrice} onChange={(event) => set({ kidsPrice: money(event.target.value) })} />
+        </label>
+        <label>
+          Kids note
+          <input value={buffet.kidsNote} onChange={(event) => set({ kidsNote: event.target.value })} />
+        </label>
+        <label>
+          Booking phone
+          <input value={buffet.bookingPhone} onChange={(event) => set({ bookingPhone: event.target.value })} />
+        </label>
+      </div>
+    </section>
+  );
+}
+
+// ---------- menu prices ----------
+
+type Row = { name: string; price: number; note?: string; includes?: string[] };
+type MenuChange = (categories: MenuDoc["categories"], renamed?: { from: string; to: string }, removed?: string) => void;
+
+const rowsOf = (category: MenuDoc["categories"][number]): Row[] => (category.kind === "items" ? category.items : category.deals);
+const withRows = (category: MenuDoc["categories"][number], rows: Row[]): MenuDoc["categories"][number] =>
+  category.kind === "items"
+    ? { ...category, items: rows.map(({ name, price, note }) => (note ? { name, price, note } : { name, price })) }
+    : { ...category, deals: rows.map(({ name, price, includes }) => ({ name, price, includes: includes ?? [] })) };
+const lines = (text: string) => text.split(/\n|,/).map((line) => line.trim()).filter(Boolean);
+
+/** Menu items: change prices, add new dishes or drinks, rename or remove them. */
+function MenuItemsEditor({ doc, onChange }: { doc: MenuDoc; onChange: MenuChange }) {
+  const [query, setQuery] = useState("");
+  const [editingRow, setEditingRow] = useState<string | null>(null);
+  const [adding, setAdding] = useState<string | null>(null);
+  const [openGroups, setOpenGroups] = useState<Set<string>>(new Set());
+  const [justAdded, setJustAdded] = useState<string | null>(null);
+  const keepOpen = (id: string) => setOpenGroups((current) => new Set(current).add(id));
+  const q = query.trim().toLowerCase();
+  const allNames = useMemo(() => new Set(doc.categories.flatMap((category) => rowsOf(category).map((row) => row.name.toLowerCase()))), [doc]);
+  const offerUsing = (name: string) => doc.offers.find((offer) => offer.items.some((item) => item.name === name));
+
+  const replaceRows = (categoryIndex: number, rows: Row[], renamed?: { from: string; to: string }, removed?: string) =>
+    onChange(doc.categories.map((category, index) => (index === categoryIndex ? withRows(category, rows) : category)), renamed, removed);
+
+  return (
+    <section className="ed-section" aria-labelledby="prices-h">
+      <div className="ed-section__head">
+        <h3 id="prices-h">{VENUE_TITLE[doc.venue]} items</h3>
+        <input type="search" className="price-search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Find a dish" aria-label="Find a dish" />
+      </div>
+      <p className="editor__hint">Change a price, add a new dish or drink to a section, or edit and remove one. New items show on the {VENUE_TITLE[doc.venue].toLowerCase()} once you save and publish.</p>
+      {doc.categories.map((category, categoryIndex) => {
+        const all = rowsOf(category);
+        const rows = all.map((row, rowIndex) => ({ row, rowIndex })).filter(({ row }) => !q || row.name.toLowerCase().includes(q));
+        if (q && !rows.length) return null;
+        const isDeals = category.kind === "deals";
+        return (
+          <details
+            className="price-group"
+            key={category.id}
+            open={Boolean(q) || openGroups.has(category.id)}
+            onToggle={(event) => {
+              if (q) return;
+              const isOpen = event.currentTarget.open;
+              setOpenGroups((current) => {
+                const next = new Set(current);
+                if (isOpen) next.add(category.id);
+                else next.delete(category.id);
+                return next;
+              });
+            }}
+          >
+            <summary>
+              {category.label} <span>({all.length})</span>
+            </summary>
+            <ul className="mi-list">
+              {rows.map(({ row, rowIndex }) => {
+                const key = `${category.id}/${row.name}`;
+                const update = (patch: Partial<Row>, renamed?: { from: string; to: string }) =>
+                  replaceRows(categoryIndex, all.map((entry, i) => (i === rowIndex ? { ...entry, ...patch } : entry)), renamed);
+                return (
+                  <li key={key} className={`mi-row${justAdded === key ? " is-new" : ""}`}>
+                    {editingRow === key ? (
+                      <ItemForm
+                        isDeals={isDeals}
+                        initial={row}
+                        taken={allNames}
+                        submitLabel="Done"
+                        onCancel={() => setEditingRow(null)}
+                        onSubmit={(next) => {
+                          update(next, next.name !== row.name ? { from: row.name, to: next.name } : undefined);
+                          keepOpen(category.id);
+                          setEditingRow(null);
+                        }}
+                      />
+                    ) : (
+                      <>
+                        <div className="mi-row__text">
+                          <span className="mi-row__name">{row.name}</span>
+                          {row.note ? <span className="mi-row__note">{row.note}</span> : null}
+                          {row.includes?.length ? <span className="mi-row__note">{row.includes.join(", ")}</span> : null}
+                        </div>
+                        <label className="mi-row__price">
+                          £
+                          <input type="number" inputMode="decimal" step="0.01" min="0" value={row.price} onChange={(event) => update({ price: money(event.target.value) })} aria-label={`Price for ${row.name}`} />
+                        </label>
+                        <div className="mi-row__btns">
+                          <button type="button" className="mini-btn" onClick={() => setEditingRow(key)} aria-label={`Edit ${row.name}`}>
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            className="icon-btn"
+                            aria-label={`Remove ${row.name}`}
+                            onClick={() => {
+                              const offer = offerUsing(row.name);
+                              const warning = offer ? `\n\nIt is also in the offer "${offer.title}" and will be taken out of it.` : "";
+                              if (!window.confirm(`Remove ${row.name} from ${category.label}?${warning}`)) return;
+                              replaceRows(categoryIndex, all.filter((_, i) => i !== rowIndex), undefined, row.name);
+                            }}
+                          >
+                            ×
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+            {q ? null : adding === category.id ? (
+              <div className="mi-add">
+                <p className="mi-add__title">New {isDeals ? "deal" : "item"} in {category.label}</p>
+                <ItemForm
+                  isDeals={isDeals}
+                  taken={allNames}
+                  submitLabel={`Add to ${category.label}`}
+                  onCancel={() => setAdding(null)}
+                  onSubmit={(next) => {
+                    replaceRows(categoryIndex, [...all, next]);
+                    keepOpen(category.id);
+                    setJustAdded(`${category.id}/${next.name}`);
+                    setAdding(null);
+                  }}
+                />
+              </div>
+            ) : (
+              <button type="button" className="mi-add-btn" onClick={() => (keepOpen(category.id), setAdding(category.id))}>
+                + Add {isDeals ? "a deal" : "an item"} to {category.label}
+              </button>
+            )}
+          </details>
         );
       })}
-      <button type="button" className="btn btn--outline" onClick={addOffer}>
-        Add offer
-      </button>
+      <p className="editor__hint">Printed PDFs do not update by themselves. After publishing menu changes, ask for the PDFs to be regenerated.</p>
+    </section>
+  );
+}
 
-      <h3 className="editor__h">{VENUE_TITLE[venue]} prices</h3>
-      {doc.categories.map((category, categoryIndex) => (
-        <details className="price-group" key={category.id}>
-          <summary>
-            {category.label} ({category.kind === "items" ? category.items.length : category.deals.length})
-          </summary>
-          {(category.kind === "items" ? category.items : category.deals).map((row, rowIndex) => (
-            <label className="price-row" key={row.name}>
-              <span>{row.name}</span>
-              <span className="price-row__input">
-                £
-                <input type="number" step="0.01" min="0" value={row.price} onChange={(event) => setPrice(categoryIndex, rowIndex, event.target.value)} aria-label={`Price for ${row.name}`} />
-              </span>
-            </label>
+/** Name, price and note (or what a deal includes), with friendly checks before it is added. */
+function ItemForm({
+  isDeals,
+  initial,
+  taken,
+  submitLabel,
+  onSubmit,
+  onCancel,
+}: {
+  isDeals: boolean;
+  initial?: Row;
+  taken: Set<string>;
+  submitLabel: string;
+  onSubmit: (row: Row) => void;
+  onCancel: () => void;
+}) {
+  const [name, setName] = useState(initial?.name ?? "");
+  const [price, setPrice] = useState(initial ? String(initial.price) : "");
+  const [extra, setExtra] = useState(isDeals ? (initial?.includes ?? []).join("\n") : (initial?.note ?? ""));
+  const [tried, setTried] = useState(false);
+
+  const cleanName = name.trim().replace(/\s+/g, " ");
+  const value = money(price);
+  const problems: string[] = [];
+  if (!cleanName) problems.push("Enter a name.");
+  else if (/[<>]/.test(cleanName)) problems.push("The name cannot contain < or >.");
+  else if (cleanName.length > 60) problems.push("Keep the name under 60 characters.");
+  else if (cleanName.toLowerCase() !== initial?.name.toLowerCase() && taken.has(cleanName.toLowerCase())) problems.push(`${cleanName} is already on this menu.`);
+  if (!(value > 0 && value < 1000)) problems.push("Enter a price between £0.01 and £999.");
+  if (/[<>]/.test(extra)) problems.push("The note cannot contain < or >.");
+  if (isDeals && !lines(extra).length) problems.push("List what the deal includes.");
+
+  const submit = () => {
+    setTried(true);
+    if (problems.length) return;
+    onSubmit(isDeals ? { name: cleanName, price: value, includes: lines(extra) } : { name: cleanName, price: value, note: extra.trim() || undefined });
+  };
+
+  return (
+    <div className="item-form" onKeyDown={(event) => event.key === "Enter" && event.target instanceof HTMLInputElement && (event.preventDefault(), submit())}>
+      <div className="item-form__grid">
+        <label>
+          Name
+          <input value={name} onChange={(event) => setName(event.target.value)} placeholder={isDeals ? "For example Family Deal" : "For example Chicken 65"} autoFocus maxLength={60} />
+        </label>
+        <label>
+          Price £
+          <input type="number" inputMode="decimal" step="0.01" min="0" value={price} onChange={(event) => setPrice(event.target.value)} placeholder="0.00" />
+        </label>
+      </div>
+      <label>
+        {isDeals ? "What it includes (one per line)" : "Short note (optional)"}
+        {isDeals ? (
+          <textarea rows={3} value={extra} onChange={(event) => setExtra(event.target.value)} placeholder={"1 curry\n1 rice\n1 soft drink"} />
+        ) : (
+          <input value={extra} onChange={(event) => setExtra(event.target.value)} placeholder="For example Chicken, mutton or beef" maxLength={80} />
+        )}
+      </label>
+      {tried && problems.length ? (
+        <ul className="offer-problems" role="alert">
+          {problems.map((problem) => (
+            <li key={problem}>{problem}</li>
           ))}
-        </details>
-      ))}
-      <p className="editor__hint">The printed PDFs do not update by themselves. After publishing new prices, ask for the PDFs to be regenerated.</p>
+        </ul>
+      ) : null}
+      <div className="item-form__btns">
+        <button type="button" className="btn btn--gold btn--small" onClick={submit}>
+          {submitLabel}
+        </button>
+        <button type="button" className="btn btn--outline btn--small" onClick={onCancel}>
+          Cancel
+        </button>
+      </div>
     </div>
   );
 }

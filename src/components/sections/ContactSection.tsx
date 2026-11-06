@@ -1,4 +1,4 @@
-import { buffet } from "../../data/menu";
+import { useBuffet } from "../../data/useContent";
 import { restaurant } from "../../data/restaurant";
 import { Artwork } from "../ui/Artwork";
 import { RedBlock } from "../ui/SectionHeading";
@@ -6,6 +6,7 @@ import { SocialLinks } from "../ui/SocialLinks";
 import { Reveal } from "../motion/Reveal";
 
 export function ContactSection() {
+  const buffet = useBuffet();
   return (
     <section id="contact" className="contact" aria-labelledby="contact-title">
       <Reveal effect="slideRight">

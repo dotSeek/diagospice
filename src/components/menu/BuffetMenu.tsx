@@ -1,10 +1,12 @@
-import { buffet, formatPrice } from "../../data/menu";
+import { formatPrice } from "../../data/menu";
+import { useBuffet } from "../../data/useContent";
 import { restaurant } from "../../data/restaurant";
 import { Artwork } from "../ui/Artwork";
 import { Stamp } from "../ui/Stamp";
 import { Reveal } from "../motion/Reveal";
 
 export function BuffetMenu() {
+  const buffet = useBuffet();
   return (
     <div id={buffet.id}>
       <Reveal className="buffet-head" effect="slideLeft">

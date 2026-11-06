@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { heroImage } from "../../data/images";
-import { buffet, formatPrice } from "../../data/menu";
+import { formatPrice } from "../../data/menu";
+import { useBuffet } from "../../data/useContent";
 import { restaurant } from "../../data/restaurant";
 import { BadgeIcon } from "../ui/BadgeIcon";
 import { Button } from "../ui/Button";
@@ -17,6 +18,7 @@ const icon = (path: ReactNode) => (
 );
 
 export function HeroSection() {
+  const buffet = useBuffet();
   return (
     <section id="home" className="hero">
       <hr className="rule" />
@@ -41,7 +43,7 @@ export function HeroSection() {
           <b>{formatPrice(buffet.adultPrice)}</b> adults
         </span>
         <span className="buffet-strip__item">
-          <b>{formatPrice(buffet.kidsPrice)}</b> kids under 10
+          <b>{formatPrice(buffet.kidsPrice)}</b> {buffet.kidsNote.toLowerCase().replace(/ years?$/, "")}
         </span>
       </Reveal>
       <div className="hero__photo" style={{ backgroundImage: `url(${heroImage})` }}>

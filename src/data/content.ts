@@ -104,19 +104,19 @@ const todayIso = (today: Date): string => today.toISOString().slice(0, 10);
 /** Reasons an offer cannot go live. An empty list means it is safe to show customers. */
 export const offerProblems = (offer: Offer, doc: Pick<MenuDoc, "venue" | "categories">, today = new Date()): string[] => {
   const problems: string[] = [];
-  if (offer.venue !== doc.venue) problems.push(`belongs to the ${offer.venue} menu, not ${doc.venue}`);
-  if (JSON.stringify(offer).includes(PENDING)) problems.push("still has fields waiting for business confirmation");
-  if (!offer.title.trim() || !offer.value.trim()) problems.push("needs a title and the offer itself");
-  if (!offer.source.trim()) problems.push("needs a source (who confirmed it)");
-  if (offer.starts && offer.expires && offer.starts > offer.expires) problems.push("starts after it ends");
-  if (offer.expires && offer.expires < todayIso(today)) problems.push("has ended");
-  if (doc.venue !== "delivery" && offer.items.length === 0) problems.push("needs at least one dish or drink with its offer price");
+  if (offer.venue !== doc.venue) problems.push(`It belongs to the ${offer.venue} menu, not the ${doc.venue} menu`);
+  if (JSON.stringify(offer).includes(PENDING)) problems.push("Some details still wait for business confirmation");
+  if (!offer.title.trim() || !offer.value.trim()) problems.push("Fill in the offer name and what the customer gets");
+  if (!offer.source.trim()) problems.push("Add who confirmed the offer");
+  if (offer.starts && offer.expires && offer.starts > offer.expires) problems.push("The start date is after the end date");
+  if (offer.expires && offer.expires < todayIso(today)) problems.push("The end date has passed");
+  if (doc.venue !== "delivery" && offer.items.length === 0) problems.push("Add at least one dish or drink with its offer price");
   const prices = menuPrices(doc);
   for (const item of offer.items) {
     const price = prices.get(item.name);
-    if (price === undefined) problems.push(`"${item.name}" is not on the ${doc.venue} menu`);
-    else if (round2(price) !== round2(item.originalPrice)) problems.push(`"${item.name}" regular price should be £${price.toFixed(2)}`);
-    if (!(item.offerPrice > 0) || round2(item.offerPrice) >= round2(item.originalPrice)) problems.push(`"${item.name}" offer price must be above £0 and below the regular price`);
+    if (price === undefined) problems.push(`${item.name} is not on the ${doc.venue} menu`);
+    else if (round2(price) !== round2(item.originalPrice)) problems.push(`${item.name}: the regular price is now £${price.toFixed(2)}, please re add it`);
+    if (!(item.offerPrice > 0) || round2(item.offerPrice) >= round2(item.originalPrice)) problems.push(`${item.name}: enter an offer price below the regular £${item.originalPrice.toFixed(2)}`);
   }
   return problems;
 };
@@ -132,16 +132,35 @@ export const docProblems = (doc: MenuDoc, venue: Venue): string[] => {
   const problems: string[] = [];
   if (doc.venue !== venue) problems.push("Document is for a different menu.");
   if (!Array.isArray(doc.categories) || !Array.isArray(doc.offers)) problems.push("Menu or offers are missing.");
+  const seen = new Set<string>();
   for (const category of doc.categories ?? []) {
     const rows = category.kind === "items" ? category.items : category.deals;
+    if (!Array.isArray(rows)) {
+      problems.push(`${category.label} has no items list.`);
+      continue;
+    }
     for (const row of rows) {
-      if (!row.name?.trim()) problems.push(`A row in ${category.label} has no name.`);
-      if (!(typeof row.price === "number" && row.price >= 0 && row.price < 1000)) problems.push(`${row.name}: price must be a number between £0 and £999.`);
+      const name = typeof row.name === "string" ? row.name.trim() : "";
+      if (!name) problems.push(`A row in ${category.label} has no name.`);
+      else if (name.length > 60 || /[<>]/.test(name)) problems.push(`${name.slice(0, 60)}: names must be under 60 characters, without < or >.`);
+      else if (seen.has(name.toLowerCase())) problems.push(`${name} is on this menu twice. Each item needs its own name.`);
+      seen.add(name.toLowerCase());
+      if (!(typeof row.price === "number" && row.price >= 0 && row.price < 1000)) problems.push(`${name}: price must be a number between £0 and £999.`);
+      const extra = "note" in row ? [row.note ?? ""] : "includes" in row ? row.includes : [];
+      if (!Array.isArray(extra) || extra.some((text) => typeof text !== "string" || text.length > 120 || /[<>]/.test(text)))
+        problems.push(`${name}: notes must be plain text under 120 characters.`);
+      if (category.kind === "deals" && !("includes" in row && Array.isArray(row.includes) && row.includes.length)) problems.push(`${name}: list what the deal includes.`);
     }
   }
+  if (doc.buffet) {
+    const b = doc.buffet;
+    if (!b.days?.trim() || !b.hours?.trim()) problems.push("Weekend buffet: fill in the days and hours.");
+    for (const [label, value] of [["adult", b.adultPrice], ["kids", b.kidsPrice]] as const)
+      if (!(typeof value === "number" && value > 0 && value < 1000)) problems.push(`Weekend buffet: the ${label} price must be between £0.01 and £999.`);
+  }
   for (const offer of doc.offers ?? []) {
-    if (offer.venue !== venue) problems.push(`Offer "${offer.title}" belongs to another menu.`);
-    if (offer.active) for (const problem of offerProblems(offer, doc)) problems.push(`Offer "${offer.title}" ${problem}.`);
+    if (offer.venue !== venue) problems.push(`${offer.title}: it belongs to another menu.`);
+    if (offer.active) for (const problem of offerProblems(offer, doc)) problems.push(`${offer.title}: ${problem}.`);
   }
   return problems;
 };

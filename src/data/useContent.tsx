@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import type { MenuDoc, Offer, Venue } from "./content";
+import { buffet as builtInBuffet } from "./menu";
 
 // Loads published menus and offers from the API. Every caller falls back to the built in
 // static menu if the request fails, so the site never shows an empty menu.
@@ -38,3 +39,19 @@ export interface ItemOffer {
 }
 export const ItemOffersContext = createContext<Map<string, ItemOffer>>(new Map());
 export const useItemOffer = (name: string): ItemOffer | undefined => useContext(ItemOffersContext).get(name);
+
+/** Weekend buffet as published on the restaurant menu (admin editable), else the built in one. */
+export function useBuffet(): typeof builtInBuffet {
+  const { doc } = useMenuDoc("restaurant");
+  const published = doc?.buffet;
+  if (!published) return builtInBuffet;
+  return {
+    ...builtInBuffet,
+    days: published.days,
+    hours: published.hours,
+    bookingPhone: published.bookingPhone,
+    adultPrice: published.adultPrice,
+    kidsPrice: published.kidsPrice,
+    kidsNote: published.kidsNote,
+  };
+}
