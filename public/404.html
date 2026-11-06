@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex" />
+    <meta name="theme-color" content="#1A1411" />
+    <title>Page not found | Diago Spice</title>
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <style>
+      @font-face { font-family: Playfair; src: url(/fonts/playfair.woff2) format("woff2"); font-weight: 400 900; font-display: swap; }
+      @font-face { font-family: Playfair; font-style: italic; src: url(/fonts/playfair-italic.woff2) format("woff2"); font-weight: 400 900; font-display: swap; }
+      @font-face { font-family: Bitter; src: url(/fonts/bitter.woff2) format("woff2"); font-weight: 100 900; font-display: swap; }
+      :root {
+        --night: #110d0b; --paper: #1a1411; --ink: #f3e6cc; --ink-soft: rgb(243 230 204 / 0.74);
+        --gold: #f0a83a; --gold-soft: #f8d596; --line: rgb(240 168 58 / 0.34); --on-gold: #1a1411;
+        --gradient-gold: linear-gradient(180deg, #fde4ab 0%, #f0a83a 58%, #c9801f 100%);
+        --gradient-red: linear-gradient(135deg, #d40b12 0%, #9c0509 100%);
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0; min-height: 100dvh; display: grid; place-items: center; padding: 32px 16px;
+        background: radial-gradient(1200px 600px at 50% -10%, rgb(240 168 58 / 0.16), transparent 65%), var(--night);
+        color: var(--ink); font: 400 18px/1.55 Bitter, Georgia, serif; text-align: center;
+      }
+      main {
+        width: min(100%, 640px); padding: 40px clamp(16px, 5vw, 48px);
+        border: 3px solid var(--gold); border-radius: 14px; background: var(--paper);
+        box-shadow: inset 0 0 0 6px var(--paper), inset 0 0 0 7px var(--line), 0 24px 60px rgb(0 0 0 / 0.55);
+      }
+      img { display: block; width: 120px; height: auto; margin: 0 auto 8px; }
+      .code {
+        margin: 0; font: 700 clamp(88px, 22vw, 140px)/1 Playfair, Georgia, serif; letter-spacing: -2px;
+        background: var(--gradient-gold); -webkit-background-clip: text; background-clip: text; color: transparent;
+      }
+      h1 { margin: 4px 0 8px; font: italic 700 clamp(24px, 6vw, 32px)/1.15 Playfair, Georgia, serif; text-transform: uppercase; color: var(--gold-soft); }
+      p { margin: 0 auto 28px; max-width: 440px; color: var(--ink-soft); }
+      nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+      a.btn {
+        display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 10px 26px;
+        border: 1px solid var(--gold); border-radius: 999px; text-decoration: none;
+        font: italic 700 16px/1.2 Playfair, Georgia, serif; text-transform: uppercase; color: var(--gold-soft);
+      }
+      a.btn:hover { background: var(--gold); color: var(--on-gold); }
+      a.red { background: var(--gradient-red); color: var(--ink); }
+      a.red:hover { background: #960408; color: var(--ink); }
+      a.gold { background: var(--gradient-gold); color: var(--on-gold); }
+      a:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+      .small { margin: 28px 0 0; font-size: 15px; }
+      .small a { color: var(--gold-soft); white-space: nowrap; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <a href="/" aria-label="Diago Spice home"><img src="/brand/logo.webp" alt="Diago Spice logo" width="640" height="731" /></a>
+      <p class="code" aria-hidden="true">404</p>
+      <h1>This page has wandered off</h1>
+      <p>We could not find the page you were looking for. It may have moved, or the link may be mistyped.</p>
+      <nav aria-label="Where to next">
+        <a class="btn red" href="/">Home</a>
+        <a class="btn" href="/#menu">See the menu</a>
+        <a class="btn gold" href="https://wa.me/447901024843?text=Hi%20Diago%20Spice%2C%20I%20would%20like%20to%20place%20an%20order." target="_blank" rel="noopener noreferrer">Order via WhatsApp</a>
+      </nav>
+      <p class="small">Diago Spice, Pengwern Road, Clase, Swansea SA6 7LW | <a href="tel:+447901024843">07901 024843</a></p>
+    </main>
+  </body>
+</html>
