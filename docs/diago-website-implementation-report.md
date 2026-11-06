@@ -61,9 +61,11 @@ Admin routes need the signed admin cookie, same origin and JSON. The staff role 
     `https://diagospice.co.uk/offers/` (60 mm, error correction Q, plain white card, solid panel behind it),
     a gold "Scan, Discover, Savour" button and the short address, then the footer lines.
     No dishes, prices, dates, venue names or opening messages, so it is reusable all year.
-  - Style: the same gold frame, red diamonds, rope divider and "wanted poster" panel as the menus, the
-    dining photo behind the headline, and the website's leaf wallpaper (`--texture-wallpaper`) drawn as
-    an inline SVG pattern so it stays vector in every viewer.
+  - Style: a standard food poster. Logo and headline on the website's leaf wallpaper
+    (`--texture-wallpaper`, same 120 px tile and colour, drawn as an inline SVG pattern so it stays vector
+    in every viewer), a row of three framed food photos (curry, biriyani, wings, no captions), the offer
+    panel with the QR code beside "Our offers", then the footer. Gold frame, red diamond corners and
+    "wanted poster" panels as on the menus. Equal 8.3 mm gaps between the four blocks.
   - Files: `diago-spice-offers-poster.pdf` (A4 210 x 297 mm), `-bleed.pdf` (216 x 303 mm, TrimBox and
     BleedBox set, all text and the QR at least 12 mm inside the trim), `.png` (2480 x 3508 px, 300 DPI),
     `-preview.jpg` for the admin page. Fonts embedded as TrueType (static Playfair Display and Bitter from

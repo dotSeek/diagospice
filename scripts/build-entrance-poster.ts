@@ -1,4 +1,6 @@
 // A4 Special Offers poster for the glass entrance door or window.
+// Layout: logo and headline on the website's leaf wallpaper, a row of three framed food photos,
+// the offer panel with the QR code, then the footer.
 // It is permanent: no dishes, prices, dates or opening messages are printed. Its one QR code opens
 // the fixed address /offers/, which shows the restaurant offers and the bar offers that are live
 // right now (each linking to its own full menu), so the poster never needs reprinting.
@@ -16,7 +18,7 @@ import { pathToFileURL } from "node:url";
 import { PDFDocument } from "pdf-lib";
 import QRCode from "qrcode";
 import { restaurant } from "../src/data/restaurant.ts";
-import { htmlDocument, logo, photoLayer, renderPdf, renderPng, root } from "./menu-pdf-kit.ts";
+import { htmlDocument, logo, photo, renderPdf, renderPng, root } from "./menu-pdf-kit.ts";
 
 const outDir = join(root, "public", "poster");
 mkdirSync(outDir, { recursive: true });
@@ -38,7 +40,12 @@ const offersPath = "/offers/";
 
 // The website's wallpaper (--texture-wallpaper in src/styles/theme.css): the same leaf lattice,
 // drawn as an inline SVG pattern so it stays sharp vector in every PDF viewer, including Apple's.
-const wallpaper = `<svg class="wall" aria-hidden="true"><defs><pattern id="leaf" width="30" height="30" patternUnits="userSpaceOnUse" viewBox="0 0 120 120"><g fill="none" stroke="#f0a83a" stroke-opacity=".12" stroke-width="2.5" stroke-linecap="round"><path d="M30 112C14 88 16 66 30 50c14 16 16 38 0 62M30 50C24 34 12 28-2 30c2 14 14 24 32 20M30 50c6-16 18-22 32-20-2 14-14 24-32 20"/><path d="M90 52C74 28 76 6 90-10c14 16 16 38 0 62M90 112C74 88 76 66 90 50M90 50c-6-16-18-22-32-20M90 50c6-16 18-22 32-20-2 14-14 24-32 20"/></g></pattern></defs><rect width="100%" height="100%" fill="url(#leaf)"/></svg>`;
+const wallpaper = `<svg class="wall" aria-hidden="true"><defs><pattern id="leaf" width="120" height="120" patternUnits="userSpaceOnUse" viewBox="0 0 120 120"><g fill="none" stroke="#33261b" stroke-width="2.5" stroke-linecap="round"><path d="M30 112C14 88 16 66 30 50c14 16 16 38 0 62M30 50C24 34 12 28-2 30c2 14 14 24 32 20M30 50c6-16 18-22 32-20-2 14-14 24-32 20"/><path d="M90 52C74 28 76 6 90-10c14 16 16 38 0 62M90 112C74 88 76 66 90 50M90 50c-6-16-18-22-32-20M90 50c6-16 18-22 32-20-2 14-14 24-32 20"/></g></pattern><radialGradient id="glow" cx="50%" cy="22%" r="60%"><stop offset="0" stop-color="#f0a83a" stop-opacity=".14"/><stop offset="1" stop-color="#f0a83a" stop-opacity="0"/></radialGradient></defs><rect width="100%" height="100%" fill="#110d0b"/><rect width="100%" height="100%" fill="url(#leaf)"/><rect width="100%" height="100%" fill="url(#glow)"/></svg>`;
+
+// The pattern tile is 120 CSS px (about 32 mm), the same size as the website tile.
+// Food photos for the picture row (the same photos the website and menus use). No captions, so
+// the poster never names a dish that might come off the menu.
+const foods = ["curry", "biriyani", "wings"];
 const code = await qr(offersPath);
 
 // All sizes are for the 210 x 297 mm trim. --b is the bleed (0 or 3 mm): the background runs into
@@ -57,68 +64,71 @@ const printFonts = [
 
 const css = (bleed: number) => `${printFonts}
 @page{size:${210 + bleed * 2}mm ${297 + bleed * 2}mm;margin:0}
-html,body{background:#120d0a}
+html,body{background:#110d0b}
 body{font-family:PBitter,serif}
-.sheet{--b:${bleed}mm;position:relative;overflow:hidden;width:${210 + bleed * 2}mm;height:${297 + bleed * 2}mm;background:radial-gradient(150mm 110mm at 50% 30%,rgba(240,168,58,.13),transparent 70%),#1a1411;color:#f3e6cc}
-.sheet::after{content:"";position:absolute;inset:calc(var(--b) + 6mm);border:1mm solid #f0a83a;border-radius:3mm;box-shadow:inset 0 0 0 1.6mm #1a1411,inset 0 0 0 1.9mm rgba(240,168,58,.5);pointer-events:none;z-index:3}
+.sheet{--b:${bleed}mm;position:relative;overflow:hidden;width:${210 + bleed * 2}mm;height:${297 + bleed * 2}mm;background:#110d0b;color:#f3e6cc}
+.wall{position:absolute;inset:0;width:100%;height:100%;z-index:0}
+.sheet::after{content:"";position:absolute;inset:calc(var(--b) + 6mm);border:1mm solid #f0a83a;border-radius:3mm;box-shadow:inset 0 0 0 1.6mm #110d0b,inset 0 0 0 1.9mm rgba(240,168,58,.5);pointer-events:none;z-index:3}
 .corner{position:absolute;z-index:4;width:5mm;height:5mm;background:#c4060c;box-shadow:0 0 0 .7mm #f0a83a;transform:rotate(45deg);border-radius:.5mm}
 .c1{top:calc(var(--b) + 3.5mm);left:calc(var(--b) + 3.5mm)}.c2{top:calc(var(--b) + 3.5mm);right:calc(var(--b) + 3.5mm)}
 .c3{bottom:calc(var(--b) + 3.5mm);left:calc(var(--b) + 3.5mm)}.c4{bottom:calc(var(--b) + 3.5mm);right:calc(var(--b) + 3.5mm)}
-.hero{position:absolute;left:0;right:0;top:0;height:calc(var(--b) + 122mm);overflow:hidden}
-.wall{position:absolute;inset:0;width:100%;height:100%;z-index:1}
 .inner{position:absolute;inset:calc(var(--b) + 13mm) calc(var(--b) + 13mm) calc(var(--b) + 12mm);display:flex;flex-direction:column;align-items:center;justify-content:space-between;text-align:center;z-index:2}
-.top,.mid{display:flex;flex-direction:column;align-items:center;width:100%}
-.logo{width:27mm}
+.top{display:flex;flex-direction:column;align-items:center;width:100%}
+.logo{width:25mm}
 .kicker{display:flex;align-items:center;gap:4mm;margin-top:2mm;font-family:PPlay,serif;font-style:italic;font-weight:700;font-size:15pt;letter-spacing:1.6mm;text-transform:uppercase;color:#f8d596;white-space:nowrap}
 .kicker::before,.kicker::after{content:"";width:18mm;height:.4mm;background:#f0a83a}
 h1{margin-top:2mm;font-family:PPlay,serif;font-weight:800;font-size:50pt;line-height:.9;text-transform:uppercase;letter-spacing:-.6mm;color:#f5b54a;text-shadow:0 .6mm 0 #8a5512}
 h1 span{display:block;font-size:64pt}
-.sde{display:flex;align-items:center;justify-content:center;gap:4.5mm;margin-top:4mm;font-family:PPlay,serif;font-weight:800;font-size:17pt;letter-spacing:1.4mm;color:#f3e6cc}
-.sde .dia{width:3mm;height:3mm;box-shadow:0 0 0 .6mm #f0a83a}
-.tag{margin-top:4mm;font-family:Vibes,cursive;font-size:24pt;line-height:1.05;color:#f8d596}
-.rope{width:100%;margin:0 0 5mm}
-.panel{position:relative;display:flex;flex-direction:column;align-items:center;width:100%;padding:5mm 8mm 5mm;border:.7mm solid #f0a83a;border-radius:2.5mm;background:#241b16;text-align:center}
+.tag{margin-top:3.5mm;font-family:Vibes,cursive;font-size:24pt;line-height:1.05;color:#f8d596}
+.foods{display:grid;grid-template-columns:repeat(3,1fr);gap:6mm;width:100%}
+.food{position:relative;height:46mm;border:.7mm solid #f0a83a;border-radius:2.5mm;background:#110d0b;box-shadow:0 0 0 1.4mm #110d0b,0 0 0 1.7mm rgba(240,168,58,.45)}
+.food img{display:block;width:100%;height:100%;object-fit:cover;border-radius:1.8mm}
+.food .star{position:absolute;z-index:1;width:3.6mm;height:3.6mm;background:#c4060c;box-shadow:0 0 0 .5mm #f0a83a;transform:rotate(45deg);border-radius:.4mm}
+.food .s1{top:-1.8mm;left:-1.8mm}.food .s2{top:-1.8mm;right:-1.8mm}.food .s3{bottom:-1.8mm;left:-1.8mm}.food .s4{bottom:-1.8mm;right:-1.8mm}
+.panel{position:relative;display:grid;grid-template-columns:73mm minmax(0,1fr);align-items:center;gap:8mm;width:100%;padding:6mm 8mm;border:.7mm solid #f0a83a;border-radius:2.5mm;background:#211913;text-align:center}
 .panel::before{content:"";position:absolute;inset:1.6mm;border:.3mm dashed rgba(240,168,58,.6);border-radius:1.6mm;pointer-events:none}
 .panel .star{position:absolute;width:4.4mm;height:4.4mm;background:#c4060c;box-shadow:0 0 0 .6mm #f0a83a;transform:rotate(45deg);border-radius:.4mm}
 .panel .s1{top:-2.2mm;left:-2.2mm}.panel .s2{top:-2.2mm;right:-2.2mm}.panel .s3{bottom:-2.2mm;left:-2.2mm}.panel .s4{bottom:-2.2mm;right:-2.2mm}
-.ph-head{display:flex;align-items:center;justify-content:center;gap:3.5mm;color:#f0a83a}
-.ph-head svg{width:10mm;height:10mm;flex:none}
-.panel h2{font-family:PPlay,serif;font-weight:800;font-size:31pt;line-height:1;text-transform:uppercase;color:#f8d596;white-space:nowrap}
-.panel p{margin-top:2mm;max-width:none;white-space:nowrap;font-size:11.5pt;line-height:1.35;color:#f3e6cc}
-.panel .savour{margin-top:2mm;font-family:Vibes,cursive;font-size:29pt;line-height:1;white-space:nowrap;color:#f5b54a}
-.code{margin-top:3mm;width:73mm;padding:6.5mm;background:#fff;border-radius:2mm;box-shadow:0 0 0 1.1mm #f0a83a}
+.code{position:relative;width:73mm;padding:6.5mm;background:#fff;border-radius:2mm;box-shadow:0 0 0 1.1mm #f0a83a}
 .code img{display:block;width:100%;height:auto;aspect-ratio:1}
-.cta{display:flex;align-items:center;justify-content:center;gap:2.2mm;margin-top:4mm;padding:2.4mm 7mm;border-radius:9mm;background:linear-gradient(180deg,#fde4ab,#f0a83a 58%,#c9801f);color:#1a1411;font-family:PPlay,serif;font-weight:800;font-size:15pt;letter-spacing:.5mm;text-transform:uppercase;white-space:nowrap;box-shadow:0 0 0 .5mm #1a1411,0 0 0 .9mm #f0a83a}
-.cta .dia{width:2.4mm;height:2.4mm;margin:0 1.2mm;box-shadow:0 0 0 .45mm #1a1411}
-.url{margin-top:2mm;font-family:PPlay,serif;font-style:italic;font-weight:700;font-size:11pt;color:#f8d596}
+.side{display:flex;flex-direction:column;align-items:center;min-width:0}
+.icons{display:flex;gap:4mm;color:#f0a83a}
+.icons svg{width:10mm;height:10mm}
+.panel h2{margin-top:2mm;font-family:PPlay,serif;font-weight:800;font-size:32pt;line-height:1;text-transform:uppercase;color:#f8d596;white-space:nowrap}
+.savour{margin-top:2.5mm;font-family:Vibes,cursive;font-size:27pt;line-height:1.08;color:#f5b54a}
+.cta{display:flex;align-items:center;justify-content:center;margin-top:5mm;padding:2.2mm 5mm;border-radius:9mm;background:linear-gradient(180deg,#fde4ab,#f0a83a 58%,#c9801f);color:#1a1411;font-family:PPlay,serif;font-weight:800;font-size:12pt;letter-spacing:.4mm;text-transform:uppercase;white-space:nowrap;box-shadow:0 0 0 .5mm #1a1411,0 0 0 .9mm #f0a83a}
+.cta .dia{width:2.2mm;height:2.2mm;margin:0 2mm;box-shadow:0 0 0 .45mm #1a1411}
+.url{margin-top:3mm;font-family:PPlay,serif;font-style:italic;font-weight:700;font-size:11pt;color:#f8d596}
 .pfoot{width:150mm;padding-top:3.5mm;border-top:.3mm solid rgba(240,168,58,.4);display:flex;flex-direction:column;align-items:center;gap:1mm}
 .great{font-family:PPlay,serif;font-style:italic;font-weight:700;font-size:15pt;color:#f3e6cc}
 .soul{font-family:Vibes,cursive;font-size:26pt;line-height:1;color:#f5b54a}
 .addr{margin-top:1mm;font-size:9pt;letter-spacing:.2mm;color:rgba(243,230,204,.8)}
 `;
 
+const stars = `<i class="star s1"></i><i class="star s2"></i><i class="star s3"></i><i class="star s4"></i>`;
+
 const body = () => `<div class="sheet">
-  <div class="hero">${photoLayer("dining", "linear-gradient(180deg,rgba(26,20,17,.72) 0%,rgba(26,20,17,.8) 55%,#1a1411 100%)")}</div>
-  <i class="corner c1"></i><i class="corner c2"></i><i class="corner c3"></i><i class="corner c4"></i>
   ${wallpaper}
+  <i class="corner c1"></i><i class="corner c2"></i><i class="corner c3"></i><i class="corner c4"></i>
   <div class="inner">
-   <div class="top">
-    <img class="logo" src="${logo}" alt="${restaurant.name} logo">
-    <p class="kicker">Diago Spice Resto Bar</p>
-    <h1>Special offers<span>await!</span></h1>
-    <p class="tag">Your next favourite flavour is just a scan away!</p>
-   </div>
-   <div class="mid">
-    <div class="rope"><i class="dia"></i></div>
+    <div class="top">
+      <img class="logo" src="${logo}" alt="${restaurant.name} logo">
+      <p class="kicker">Diago Spice Resto Bar</p>
+      <h1>Special offers<span>await!</span></h1>
+      <p class="tag">Your next favourite flavour is just a scan away!</p>
+    </div>
+    <div class="foods">${foods.map((name) => `<figure class="food">${stars}<img src="${photo(name)}" alt=""></figure>`).join("")}</div>
     <section class="panel">
-      <i class="star s1"></i><i class="star s2"></i><i class="star s3"></i><i class="star s4"></i>
-      <div class="ph-head">${plateIcon}<h2>Our offers</h2>${glassIcon}</div>
-      <p class="savour">Crave the Spice. Love the Taste!</p>
+      ${stars}
       <div class="code"><img src="${code}" alt="QR code for ${restaurant.websiteDisplay}${offersPath}"></div>
-      <span class="cta">Scan <i class="dia"></i> Discover <i class="dia"></i> Savour</span>
-      <span class="url">${restaurant.websiteDisplay}${offersPath.replace(/\/$/, "")}</span>
+      <div class="side">
+        <div class="icons">${plateIcon}${glassIcon}</div>
+        <h2>Our offers</h2>
+        <p class="savour">Crave the Spice.<br>Love the Taste!</p>
+        <span class="cta">Scan <i class="dia"></i> Discover <i class="dia"></i> Savour</span>
+        <span class="url">${restaurant.websiteDisplay}${offersPath.replace(/\/$/, "")}</span>
+      </div>
     </section>
-   </div>
     <div class="pfoot">
       <p class="great">Great Food. Great Drinks. Great Offers.</p>
       <p class="soul">Desi Spice. Western Soul. Big Flavours!</p>
