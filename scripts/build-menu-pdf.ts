@@ -1,6 +1,8 @@
 // Builds the delivery menu PDF in public/ from the same data the website uses.
-// Format: an 8 page B5 booklet (176 x 250 mm pages). Print on B4 sheets, fold in
-// half and staple, so page 1 is the front cover and page 8 the back cover.
+// Format: an A4 tri-fold leaflet (roll fold). Two landscape A4 sides, three panels each:
+//   page 1, outside:  [fold-in flap 97mm] [back 100mm] [front cover 100mm]
+//   page 2, inside:   [left 100mm] [middle 100mm] [right 97mm, back of the flap]
+// Print double sided, flip on the short edge, then fold the right inside panel in first.
 // Design and print step live in scripts/menu-pdf-kit.ts, shared with the dine in menus.
 // Run with: npm run menu:pdf  (needs Google Chrome installed, or set CHROME_PATH)
 // Set MENU_PREVIEW=/some/file.html to also keep the HTML for a visual check.
@@ -8,10 +10,10 @@
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 import QRCode from "qrcode";
-import { buffet, categoryById, delivery } from "../src/data/menu.ts";
+import { buffet, categoryById, delivery, formatPrice } from "../src/data/menu.ts";
 import type { DealCategory, ItemCategory } from "../src/data/menu.ts";
 import { restaurant } from "../src/data/restaurant.ts";
-import { band, block, buffetPage, coverPhoto, deals, escapeHtml, htmlDocument, logo, page, renderPdf, root, strip } from "./menu-pdf-kit.ts";
+import { band, block, coverPhoto, deals, escapeHtml, htmlDocument, logo, renderPdf, root } from "./menu-pdf-kit.ts";
 
 const cat = (id: string): ItemCategory => categoryById(id) as ItemCategory;
 
@@ -27,6 +29,8 @@ writeFileSync(join(root, "public", "brand", "whatsapp-qr.svg"), whatsappQrSvg);
 const whatsappQr = `data:image/svg+xml;base64,${Buffer.from(whatsappQrSvg).toString("base64")}`;
 const WA_ICON =
   '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.1l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.6.8-.8 1-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.8-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.7a2.7 2.7 0 0 0 1.8-1.3 2.2 2.2 0 0 0 .2-1.3c-.1-.1-.2-.2-.5-.3z"/></svg>';
+const deal = (id: string): DealCategory => categoryById(id) as DealCategory;
+
 const deliveryBand = `<div class="delivery">
   <p class="d-head">${escapeHtml(delivery.headline)}</p>
   <p>${escapeHtml(delivery.beyond)}</p>
@@ -39,71 +43,150 @@ const orderRow = `<div class="order">
   <span><small>Online</small>${restaurant.websiteDisplay}</span>
 </div>`;
 
-const cover = `<div class="page cover"><div class="frame">${coverPhoto()}
+const panel = (body: string, extraClass = ""): string =>
+  `<section class="panel ${extraClass}"><div class="frame"><main>${body}</main></div></section>`;
+
+const panelFoot = `<p class="pfoot">${restaurant.name} | ${restaurant.addressInline} | ${restaurant.phoneDisplay}</p>`;
+
+// ---------- Outside: flap, back, cover ----------
+const flap = panel(`${band("chips", "Better together", "Deals")}${deals(deal("meal-deals"))}${deals(deal("rice-curry-deals"))}
+  <div class="buffet-box">
+    <p class="bb-head">Weekend buffet</p>
+    <p>${buffet.days}, ${buffet.hours}</p>
+    <p class="bb-prices"><b>${formatPrice(buffet.adultPrice)}</b> adults <b>${formatPrice(buffet.kidsPrice)}</b> ${buffet.kidsNote.toLowerCase()}</p>
+    <p>For booking call ${buffet.bookingPhone}</p>
+  </div>`, "flap");
+
+const back = panel(`<div class="back-head">
+    <img class="back-logo" src="${logo}" alt="${restaurant.name} logo">
+    <h1 class="gold">Order your favourites!</h1>
+    <p>Scan the QR code to order directly through WhatsApp.</p>
+  </div>
+  <a class="poster" href="${restaurant.whatsappUrl}">
+    <i class="star s1"></i><i class="star s2"></i><i class="star s3"></i><i class="star s4"></i>
+    <span class="scan-label">SCAN TO ORDER</span>
+    <span class="qr-card"><img src="${whatsappQr}" alt="WhatsApp order QR code"></span>
+  </a>
+  <a class="wa-btn" href="${restaurant.whatsappUrl}">${WA_ICON}ORDER VIA WHATSAPP</a>
+  <div class="manual-box">
+    <p class="mb-q">Prefer to order manually?</p>
+    <p class="mb-t">Order directly on WhatsApp: <a class="mb-n" href="${restaurant.whatsappUrl}">${WA_ICON}${restaurant.phoneDisplay}</a></p>
+  </div>
+  <section class="terms">
+    <h2>Delivery information</h2>
+    <ul>
+      <li><span class="ic">£</span><span><b>Minimum order ${escapeHtml(delivery.minimumOrder)}</b> (depending on delivery location)</span></li>
+      <li><span class="ic">✓</span><span><b>Free delivery</b> within 3 miles</span></li>
+      <li><span class="ic">+</span><span><b>£2 additional delivery charge</b> for locations beyond 3 miles</span></li>
+    </ul>
+  </section>
+  ${panelFoot}`, "back");
+
+const cover = `<section class="panel cover"><div class="frame">${coverPhoto()}
   <img class="cover-logo" src="${logo}" alt="${restaurant.name} logo">
   <div>
     <p class="script">Welcome to Diago Spice</p>
     <h1 class="gold">Menu</h1>
     <p class="sub">Delivery menu</p>
-    <div class="chips"><span>Curries</span><span>Kottu</span><span>Biriyani</span><span>Burgers</span><span>Wings</span><span>Meal deals</span></div>
+    <div class="chips"><span>Curries</span><span>Kottu</span><span>Biriyani</span><span>Burgers</span><span>Wings</span></div>
   </div>
   <div>
     ${deliveryBand}
     ${orderRow}
   </div>
-</div></div>`;
+</div></section>`;
 
-const waDisplay = restaurant.phoneDisplay;
+// ---------- Inside: three menu panels ----------
+const insideLeft = panel(`${band("wings", "To begin", "Starters")}${block(cat("starters"), 1)}${block(cat("nan"))}${block(cat("desserts"))}`);
+const insideMiddle = panel(`${band("curry", "Slow cooked", "Mains")}${block(cat("mains"), 1)}${block(cat("rice"), 1)}`);
+const insideRight = panel(`${band("burger", "House favourites", "Specials")}${block(cat("specials"), 1)}${block(cat("burgers"), 1)}${block(cat("chips"), 1)}`, "in-right");
 
-const back = page(
-  8,
-  `<div class="back-head">
-    <img class="back-logo" src="${logo}" alt="${restaurant.name} logo">
-    <h1 class="gold">Order your favourites!</h1>
-    <p>Scan the QR code to order directly through WhatsApp.</p>
-  </div>
-  <div class="rope">✦</div>
-  <div class="scan">
-    <a class="poster" href="${restaurant.whatsappUrl}">
-      <i class="star s1"></i><i class="star s2"></i><i class="star s3"></i><i class="star s4"></i>
-      <span class="scan-label">SCAN TO ORDER</span>
-      <span class="qr-card"><img src="${whatsappQr}" alt="WhatsApp order QR code"></span>
-    </a>
-    <div class="scan-side">
-      <a class="wa-btn" href="${restaurant.whatsappUrl}">${WA_ICON}ORDER VIA WHATSAPP</a>
-      <p class="manual"><strong>Prefer to order manually?</strong>Order directly on WhatsApp:<br><a href="${restaurant.whatsappUrl}">${waDisplay}</a></p>
-      <p class="manual">Or call us on <a href="${restaurant.phoneHref}" style="font-size:11pt">${restaurant.phoneDisplay}</a></p>
-    </div>
-  </div>
-  <section class="terms">
-    <h2>Delivery information</h2>
-    <ul>
-      <li><span class="ic">£</span><span><b>Minimum order £15 to £20</b> (depending on delivery location)</span></li>
-      <li><span class="ic">✓</span><span><b>Free delivery</b> within 3 miles</span></li>
-      <li><span class="ic">+</span><span><b>£2 additional delivery charge</b> for locations beyond 3 miles</span></li>
-    </ul>
-  </section>
-  <div class="spacer"></div>
-  <div class="contact-row">
-    <div><b>Address</b>${restaurant.addressInline}</div>
-    <div><b>Website</b><a href="${restaurant.websiteUrl}" style="color:inherit;text-decoration:none">${restaurant.websiteDisplay}</a></div>
-    <div><b>Buffet</b>Fri, Sat, Sun<br>${buffet.hours}</div>
-  </div>`,
-);
+const triCss = `
+/* crisp shadow only: Apple's PDF renderer turns blurred text shadows into dark boxes at this size */
+.gold{text-shadow:0 .3mm 0 #7a4a10}
+.sheet{width:297mm;height:210mm;display:grid;page-break-after:always;overflow:hidden;
+  background:radial-gradient(160mm 90mm at 50% 0%,rgba(240,168,58,.12),transparent 70%),#1a1411}
+.sheet:last-child{page-break-after:auto}
+.outside{grid-template-columns:97mm 100mm 100mm}
+.inside{grid-template-columns:100mm 100mm 97mm}
+.panel{height:210mm;padding:4.5mm 4mm;min-width:0}
+/* spread each panel top to bottom so frames fill evenly and the last items line up across panels */
+.panel:not(.cover) main{justify-content:space-between}
+.panel:not(.cover) .block{margin-bottom:0}
+.panel .frame{padding:3.4mm 3.8mm 2.6mm;border-width:.5mm;border-radius:3mm;box-shadow:inset 0 0 0 1mm #1a1411,inset 0 0 0 1.2mm rgba(240,168,58,.38)}
+.title{font-size:12pt;gap:2.4mm;margin-bottom:2.4mm}
+.dia{width:1.6mm;height:1.6mm;box-shadow:0 0 0 .35mm #f0a83a}
+.block{margin-bottom:3.6mm}
+.list.c1{max-width:none}
+.list.c2{column-gap:5mm}
+.item{margin-bottom:1.45mm}
+.line{gap:1mm}
+.name,.price{font-size:8.8pt}
+.note{font-size:6.3pt;line-height:1.1}
+.dots{min-width:3mm;border-bottom-width:.3mm}
+.band{height:23mm;margin-bottom:3.2mm;padding:2.2mm 3.6mm;border-radius:2mm}
+.in-right .band{height:20mm}
+.flap .band{height:16mm;margin-bottom:2.6mm}
+.flap .band h1{font-size:17pt}
+.flap .band .script{font-size:11pt}
+.band .script{font-size:13pt}
+.band h1{font-size:20pt}
+.deals{grid-template-columns:1fr;gap:1.3mm}
+.deal{padding:1.35mm 3mm;border-radius:2mm;gap:.4mm}
+.deal h3{font-size:9.4pt}
+.deal p{font-size:6.8pt;line-height:1.25}
+.deal b{font-size:9pt;padding:.3mm 3mm}
+.buffet-box{border-radius:2.5mm;padding:2.6mm 3.5mm;text-align:center;background:linear-gradient(135deg,#d40b12,#9c0509);box-shadow:inset 0 -.8mm 0 #f0a83a;font-size:7.6pt;line-height:1.35}
+.bb-head{font-family:Playfair,serif;font-style:italic;font-weight:700;font-size:11pt;text-transform:uppercase;color:#f8d596}
+.bb-prices b{font-family:Playfair,serif;font-size:10pt;color:#f8d596}
+/* back panel */
+.back main{align-items:stretch}
+.back-head{text-align:center}
+.back-logo{width:20mm;margin:0 auto 1mm}
+.back-head h1{font-size:14.5pt}
+.back-head p{font-size:7.6pt;margin-top:1mm}
+.poster{margin:3.2mm auto 0;width:56mm;padding:2.2mm}
+.scan-label{font-size:8.6pt;letter-spacing:.45mm;margin-bottom:1.4mm}
+.qr-card{padding:3.4mm}
+.wa-btn{margin:3.2mm auto 0;padding:2mm 4mm;font-size:8.4pt;gap:2mm;width:66mm}
+.wa-btn svg{width:4.6mm;height:4.6mm}
+.manual-box{text-align:center;line-height:1.25}
+.mb-q{font-family:Playfair,serif;font-style:italic;font-weight:700;font-size:9pt;color:#f8d596}
+.mb-t{display:flex;align-items:center;justify-content:center;gap:1.4mm;white-space:nowrap;font-size:7.6pt;color:rgba(243,230,204,.9);margin-top:.8mm}
+.mb-n{display:inline-flex;align-items:center;gap:1mm;font-family:Playfair,serif;font-weight:700;font-size:10pt;color:#f0a83a;text-decoration:none;white-space:nowrap;font-variant-numeric:lining-nums}
+.mb-n svg{width:3.6mm;height:3.6mm;flex:none}
+.terms{margin-top:3mm;padding:2.6mm 3.2mm;border-radius:2.5mm}
+.terms h2{font-size:9.6pt;margin-bottom:1.6mm}
+.terms ul{gap:1.2mm}
+.terms li{font-size:7.2pt;gap:2mm;line-height:1.25}
+.terms li b{font-size:7.8pt}
+.terms .ic{width:5mm;height:5mm;font-size:7pt}
+.pfoot{font-size:6.2pt;text-align:center;color:rgba(243,230,204,.7);border-top:.25mm solid rgba(240,168,58,.35);padding-top:1.6mm}
+/* cover panel: full bleed photo */
+.cover{padding:0}
+.cover .frame{height:100%;padding:9mm 8mm 8mm;border-radius:0}
+.cover .frame::after{box-shadow:inset 0 0 0 4mm #110d0b,inset 0 0 0 4.5mm #f0a83a,inset 0 0 0 5.5mm rgba(17,13,11,.4),inset 0 0 0 5.7mm rgba(240,168,58,.5)}
+.cover-logo{width:46mm}
+.cover .script{font-size:17pt}
+.cover h1{font-size:50pt}
+.cover .sub{font-size:8.6pt;gap:3mm}
+.cover .sub::before,.cover .sub::after{width:10mm}
+.chips{gap:1.2mm;margin-top:2.6mm}
+.chips span{font-size:6.6pt;padding:.4mm 2.2mm}
+.cover .delivery{padding:2.6mm 3.2mm;font-size:7.2pt}
+.cover .d-head{font-size:10.5pt}
+.cover .d-min{padding:.3mm 3mm}
+.order{gap:1.6mm;margin-top:2.2mm}
+.order span{font-size:7.6pt;padding:1.3mm 1mm}
+.order small{font-size:5.4pt}
+`;
 
 const menu = htmlDocument(
   `${restaurant.name} Delivery Menu | ${restaurant.addressInline}`,
-  [
-    cover,
-    page(2, `${band("wings", "To begin", "Starters")}${block(cat("starters"))}${block(cat("nan"))}`),
-    page(3, `${band("curry", "Slow cooked", "Mains")}${block(cat("mains"))}${block(cat("chips"))}`),
-    page(4, `${band("biriyani", "House favourites", "Rice and specials")}${block(cat("rice"))}${block(cat("specials"))}`),
-    page(5, `${band("burger", "Stacked high", "Burgers")}${block(cat("burgers"), 1)}${block(cat("desserts"))}${strip("dessert", "chips", "wings")}<div class="spacer"></div>${deliveryBand}`),
-    page(6, `${band("chips", "Better together", "Deals")}${deals(categoryById("meal-deals") as DealCategory)}${deals(categoryById("rice-curry-deals") as DealCategory)}`),
-    buffetPage(7, buffet),
-    back,
-  ].join("\n"),
-  "B5",
+  `<div class="sheet outside">${flap}${back}${cover}</div>
+<div class="sheet inside">${insideLeft}${insideMiddle}${insideRight}</div>`,
+  "A4-landscape",
+  triCss,
 );
 
 renderPdf(menu, join(root, "public", "diago-spice-menu.pdf"), process.env.MENU_PREVIEW);

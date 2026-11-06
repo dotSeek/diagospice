@@ -1,6 +1,6 @@
 // Shared building blocks for every Diago Spice PDF menu: fonts, colours, page frame,
 // photo bands, item lists, deal cards and the Chrome print step. All menus share this
-// one design, drawn on a B5 page box (176 x 250 mm). A4 files scale that same page up
+// one design. Portrait pages are drawn on a B5 box (176 x 250 mm) and A4 portrait files scale that same page up
 // by 1.188 so the layout, type and spacing stay identical, only larger.
 import { execFileSync } from "node:child_process";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -53,7 +53,7 @@ export const deals = (category: DealCategory): string => {
 // Photos are real <img> elements with object-fit, never CSS background images. Chrome writes
 // backgrounds into the PDF as repeating tiles, and some viewers (WhatsApp and iOS Quick Look)
 // draw a sliver of the next tile, so the photo looks doubled. An image is drawn exactly once.
-const photoLayer = (image: string, shade: string): string =>
+export const photoLayer = (image: string, shade: string): string =>
   `<img class="ph" src="${photo(image)}" alt=""><span class="shade" style="background:${shade}"></span>`;
 
 export const band = (image: string, kicker: string, heading: string): string =>
@@ -207,16 +207,18 @@ main{flex:1;min-height:0;display:flex;flex-direction:column}
 .strip div{position:relative;overflow:hidden;height:34mm;border-radius:2.5mm;border:.25mm solid rgba(240,168,58,.45);background:#110d0b}
 `;
 
-export type PaperFormat = "B5" | "A4";
+export type PaperFormat = "B5" | "A4" | "A4-landscape";
 
 const formatCss: Record<PaperFormat, string> = {
   B5: "@page{size:176mm 250mm;margin:0}",
   // 297 / 250 = 1.188: the B5 page scaled to fill A4 height, 0.9 mm of matching background at the right edge.
   A4: "@page{size:210mm 297mm;margin:0}html,body{background:#1a1411}.page{zoom:1.188}",
+  // Tri-fold leaflets: each landscape A4 side holds three panels.
+  "A4-landscape": "@page{size:297mm 210mm;margin:0}html,body{background:#1a1411}",
 };
 
-export const htmlDocument = (pageTitle: string, body: string, format: PaperFormat): string =>
-  `<!doctype html><html lang="en-GB"><head><meta charset="utf-8"><title>${pageTitle}</title><style>${formatCss[format]}${baseStyles}</style></head><body>${body}</body></html>`;
+export const htmlDocument = (pageTitle: string, body: string, format: PaperFormat, extraCss = ""): string =>
+  `<!doctype html><html lang="en-GB"><head><meta charset="utf-8"><title>${pageTitle}</title><style>${formatCss[format]}${baseStyles}${extraCss}</style></head><body>${body}</body></html>`;
 
 /** Prints the HTML to a PDF with headless Chrome. */
 export const renderPdf = (html: string, outPath: string, previewPath?: string): void => {

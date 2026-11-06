@@ -1,5 +1,5 @@
 // Builds the two in house A4 menus: the restaurant (dine in) menu and the bar menu.
-// Same design as the delivery booklet (scripts/menu-pdf-kit.ts), printed on A4.
+// Same design as the delivery tri-fold (scripts/menu-pdf-kit.ts), printed as A4 portrait pages.
 //
 // Inputs (never committed, see private/README.md):
 //   private/data/restaurantMenu.ts and private/data/barMenu.ts   dine in prices
