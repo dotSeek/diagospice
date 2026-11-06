@@ -119,7 +119,7 @@ const categoryHtml = (category: MenuCategoryData): string => {
 const buffetHtml = `<section><h2>Buffet menu</h2><p style="text-align:center">${esc(buffet.days)}, ${esc(buffet.hours)}. Adults ${formatPrice(buffet.adultPrice)}, ${esc(buffet.kidsNote.toLowerCase())} ${formatPrice(buffet.kidsPrice)}. For booking call <a href="${restaurant.phoneHref}">${esc(buffet.bookingPhone)}</a>.</p></section>
 ${buffet.groups.map((group) => `<section><h2>${esc(group.title)}</h2><ul class="plain">${group.items.map((item) => `<li>${esc(item)}</li>`).join("")}</ul></section>`).join("")}`;
 
-const deliveryHtml = `<section><h2>Delivery</h2><p style="text-align:center">${esc(delivery.howToOrder)} ${esc(delivery.freeDelivery)}. Minimum order ${delivery.minimumOrder}. <a href="${restaurant.phoneHref}">${esc(restaurant.phoneDisplay)}</a> | <a href="${restaurant.whatsappUrl}">WhatsApp</a></p></section>`;
+const deliveryHtml = `<section><h2>Delivery</h2><p style="text-align:center">${esc(delivery.headline)} ${esc(delivery.beyond)} Minimum order ${delivery.minimumOrder}. ${esc(delivery.howToOrder)} <a href="${restaurant.phoneHref}">${esc(restaurant.phoneDisplay)}</a> | <a href="${restaurant.whatsappUrl}">WhatsApp</a></p></section>`;
 
 const menuJsonLd = (name: string, url: string, categories: MenuCategoryData[]): string =>
   JSON.stringify({
@@ -212,7 +212,7 @@ const pages: SharePage[] = [
     folder: "menu",
     heading: "Delivery menu",
     title: "Delivery Menu | Diago Spice, Clase, Swansea",
-    description: `Diago Spice delivery menu with prices: curries, kottu, biriyani, burgers and meal deals. Free delivery within 3 miles, minimum order £20. Download the PDF.`,
+    description: `Diago Spice delivery menu with prices: curries, kottu, biriyani, burgers and meal deals. Free delivery within 3 miles, minimum order £15 to £20. See the PDF.`,
     image: "menu",
     imageAlt: "Diago Spice logo beside the word Menu",
     pdfUrl: restaurant.menuPdfUrl,

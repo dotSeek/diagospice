@@ -7,6 +7,7 @@ import { MenuCategoryTabs } from "../menu/MenuCategoryTabs";
 import { MenuDownloadButton } from "../menu/MenuDownloadButton";
 import { MenuShareButton } from "../menu/MenuShareButton";
 import { Button } from "../ui/Button";
+import { WhatsAppOrderCard } from "../menu/WhatsAppOrderCard";
 import { restaurant } from "../../data/restaurant";
 
 const category = (id: string, art?: ArtName) => <MenuCategory category={categoryById(id)} art={art} />;
@@ -23,16 +24,17 @@ export function MenuSection() {
       </div>
       <p className="menu-tagline">Delivery menu</p>
       <p className="menu-delivery">
-        {delivery.howToOrder} {delivery.freeDelivery}. Minimum order {delivery.minimumOrder}.
+        {delivery.headline} {delivery.beyond} Minimum order {delivery.minimumOrder}. {delivery.howToOrder}
       </p>
       <MenuCategoryTabs />
       <div className="menu-download">
         <Button href={restaurant.whatsappUrl} target="_blank" rel="noopener noreferrer" variant="primary">
-          Order on WhatsApp
+          Order via WhatsApp
         </Button>
         <MenuDownloadButton />
         <MenuShareButton url={restaurant.menuPageUrl} title="Diago Spice menu" label="Share menu" />
       </div>
+      <WhatsAppOrderCard />
 
       <div className="menu-row">
         <div className="menu-col">

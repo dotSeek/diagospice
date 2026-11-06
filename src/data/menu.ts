@@ -228,8 +228,10 @@ export const menuCategories: MenuCategoryData[] = [
 
 export const delivery = {
   howToOrder: "Call us or place your order via WhatsApp.",
+  headline: "Enjoy free delivery within 3 miles!",
+  beyond: "Orders beyond 3 miles are subject to a small £2 delivery charge.",
   freeDelivery: "Free delivery within 3 miles",
-  minimumOrder: "£20",
+  minimumOrder: "£15 to £20",
 };
 
 export const buffet = {

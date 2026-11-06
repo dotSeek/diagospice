@@ -8,7 +8,7 @@ import { Button } from "../ui/Button";
 const chips = [
   delivery.freeDelivery,
   `Minimum order ${delivery.minimumOrder}`,
-  "Order on WhatsApp",
+  "Order via WhatsApp",
   "Meal deals",
   "Weekend buffet",
 ];
@@ -60,7 +60,7 @@ export function HeroSection() {
               Explore our menu
             </Button>
             <Button variant="gold" href={restaurant.whatsappUrl} target="_blank" rel="noopener noreferrer">
-              Order on WhatsApp
+              Order via WhatsApp
             </Button>
           </div>
           <div className="info-cards">

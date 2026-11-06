@@ -6,6 +6,7 @@ import { GallerySection } from "./components/sections/GallerySection";
 import { HeroSection } from "./components/sections/HeroSection";
 import { LocationSection } from "./components/sections/LocationSection";
 import { MenuSection } from "./components/sections/MenuSection";
+import { WhatsAppFloat } from "./components/ui/WhatsAppFloat";
 
 export function App() {
   return (
@@ -33,6 +34,7 @@ export function App() {
         </div>
         <div className="sheet__end" />
       </div>
+      <WhatsAppFloat />
     </>
   );
 }
