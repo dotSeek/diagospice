@@ -59,10 +59,7 @@ export function HeroSection() {
             burgers and fiery wings.
           </Reveal>
           <Reveal as="p" className="hero__closing" delay={0.44}>
-            Desi Spice. Western Soul. Big Flavours!{" "}
-            <span role="img" aria-label="cowboy">
-              🤠
-            </span>
+            Desi Spice. Western Soul. Big Flavours!
           </Reveal>
           <Reveal as="ul" className="chips" delay={0.45}>
             {chips.map((chip) => (
