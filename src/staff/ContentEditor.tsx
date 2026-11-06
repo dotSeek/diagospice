@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { OFFER_LABEL, PENDING, VENUES, VENUE_TITLE, menuPrices, offerProblems } from "../data/content";
 import type { BuffetInfo, MenuDoc, Offer, Venue } from "../data/content";
 import { formatPrice } from "../data/menu";
+import { DatePicker } from "./DatePicker";
 
 // Admin menu and offer editor. Every change is a DRAFT until "Publish" is pressed; customers keep
 // seeing the published menu. The server re-checks every rule on save and on publish.
@@ -415,14 +416,8 @@ export function OfferCard({
               </div>
               <CustomConditions conditions={offer.conditions.filter((c) => !QUICK_CONDITIONS[offer.venue].includes(c))} onChange={(custom) => onChange({ conditions: [...offer.conditions.filter((c) => QUICK_CONDITIONS[offer.venue].includes(c)), ...custom] })} />
               <div className="dates">
-                <label>
-                  Starts (optional)
-                  <input type="date" value={offer.starts ?? ""} onChange={(event) => onChange({ starts: event.target.value || undefined })} />
-                </label>
-                <label>
-                  Ends (optional)
-                  <input type="date" value={offer.expires ?? ""} onChange={(event) => onChange({ expires: event.target.value || undefined })} />
-                </label>
+                <DatePicker label="Starts (optional)" value={offer.starts} max={offer.expires} placeholder="From today" onChange={(starts) => onChange({ starts })} />
+                <DatePicker label="Ends (optional)" value={offer.expires} min={offer.starts} placeholder="No end date" onChange={(expires) => onChange({ expires })} />
               </div>
             </div>
           </div>
