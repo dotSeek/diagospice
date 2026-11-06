@@ -88,4 +88,8 @@ Until then the live site keeps serving today's menus and shows no offers.
 - PDFs (delivery tri-fold, A4 staff menus, leaflet, QR cards) do not update automatically; regenerate on request.
 - The website delivery share page (`/menu/`) and PDF use the built in delivery menu until regenerated.
 - "First order" cannot be verified automatically (ordering is by WhatsApp or phone); the conditions text must say how staff check it.
+- Freshness: `/api/menu` and `/api/offers` send `Cache-Control: public, max-age=0, must-revalidate`, so phones
+  always check with the server, and `Vercel-CDN-Cache-Control: max-age=30, stale-while-revalidate=30` for
+  Vercel's edge only. A published change reaches customers within about a minute on the live site (2 to 4 s
+  locally). Browsers honour stale-while-revalidate too, so it must never go in the plain Cache-Control.
 - No unit test or lint setup exists in the project; checks were TypeScript, production build and browser tests.

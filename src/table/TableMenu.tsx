@@ -19,6 +19,7 @@ type Venue = "restaurant" | "bar";
 // ?preview=1 shows the unpublished draft to a signed in admin (the API refuses everyone else).
 const preview = new URLSearchParams(location.search).get("preview") === "1";
 
+// `updated` is a date (built in menus) or a full timestamp (admin saves); only the day is shown.
 export function TableMenu({ venue }: { venue: Venue }) {
   const { doc: data, failed } = useMenuDoc(venue, preview);
   // Offers arrive already filtered to this venue's live ones. Bar and restaurant never mix.
@@ -97,7 +98,7 @@ export function TableMenu({ venue }: { venue: Venue }) {
               <br />
               <a href={restaurant.phoneHref}>{restaurant.phoneDisplay}</a> | <a href="/">{restaurant.websiteDisplay}</a>
             </p>
-            {data ? <p className="table-foot__updated">Menu updated {new Date(`${data.updated}T12:00:00`).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}</p> : null}
+            {data ? <p className="table-foot__updated">Menu updated {new Date(`${data.updated.slice(0, 10)}T12:00:00`).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}</p> : null}
           </footer>
         </div>
       </ItemOffersContext.Provider>

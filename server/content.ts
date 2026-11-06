@@ -100,6 +100,15 @@ const isAdmin = (req: IncomingMessage): boolean => currentSession(req)?.role ===
 // ---------- public ----------
 
 /** GET /api/menu?name=delivery|restaurant|bar (add &draft=1 as a signed in admin to preview). */
+// Prices and offers must never linger after an admin switches them off. Browsers always check with
+// the server (they also honour stale-while-revalidate, so it must not reach them). Only Vercel's edge
+// keeps a shared copy, through Vercel-CDN-Cache-Control, which Vercel strips before the response
+// leaves its network: at most 30 s, plus 30 s while it refreshes.
+const setPublicCache = (res: ServerResponse) => {
+  res.setHeader("Cache-Control", "public, max-age=0, must-revalidate");
+  res.setHeader("Vercel-CDN-Cache-Control", "max-age=30, stale-while-revalidate=30");
+};
+
 export async function publicMenu(req: IncomingMessage, res: ServerResponse) {
   if (req.method !== "GET") return json(res, 405, { error: "Use GET." });
   const url = new URL(req.url ?? "/", "http://local");
@@ -111,7 +120,8 @@ export async function publicMenu(req: IncomingMessage, res: ServerResponse) {
     const doc = forCustomers(preview ? await draft(venue) : await published(venue));
     res.statusCode = 200;
     res.setHeader("Content-Type", "application/json; charset=utf-8");
-    res.setHeader("Cache-Control", preview ? "private, no-store" : "public, max-age=30, s-maxage=60, stale-while-revalidate=300");
+    if (preview) res.setHeader("Cache-Control", "private, no-store");
+    else setPublicCache(res);
     res.setHeader("X-Robots-Tag", "noindex, nofollow");
     res.end(JSON.stringify(doc));
   } catch {
@@ -127,7 +137,7 @@ export async function publicOffers(req: IncomingMessage, res: ServerResponse) {
     for (const venue of VENUES) result[venue] = forCustomers(await published(venue)).offers;
     res.statusCode = 200;
     res.setHeader("Content-Type", "application/json; charset=utf-8");
-    res.setHeader("Cache-Control", "public, max-age=30, s-maxage=60, stale-while-revalidate=300");
+    setPublicCache(res);
     res.end(JSON.stringify(result));
   } catch {
     return json(res, 500, { error: "Offers could not be loaded." });
