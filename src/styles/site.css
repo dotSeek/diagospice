@@ -783,7 +783,8 @@ button {
   background-color: var(--color-black);
   background-size: cover;
   background-position: center;
-  border: var(--stroke-1) solid var(--color-line);
+  border: var(--stroke-1) solid rgb(240 168 58 / 0.6);
+  background-clip: padding-box;
   color: var(--color-ink);
   isolation: isolate;
   border-radius: var(--radius-md);
