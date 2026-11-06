@@ -538,3 +538,36 @@ a:focus-visible {
   .poster-admin { grid-template-columns: 1fr; }
   .poster-admin__preview { max-width: 240px; margin: 0 auto; }
 }
+
+/* Buffet Special Menu: sections of dishes picked from the restaurant menu */
+.bf-head { margin-top: 22px; }
+.bf-count { display: inline-grid; place-items: center; min-width: 28px; height: 24px; margin-left: 6px; padding: 0 8px; border-radius: 999px; background: var(--color-gold); color: var(--color-on-gold); font: 700 13px var(--font-body); vertical-align: middle; }
+.bf-groups { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 12px; margin: 12px 0; }
+.bf-group { display: flex; flex-direction: column; gap: 10px; padding: 12px; border: 1px solid var(--color-line); border-radius: var(--radius-md); background: rgb(17 13 11 / 0.55); }
+.bf-group__head { display: flex; align-items: center; gap: 8px; }
+.editor .bf-group__title { flex: 1; min-width: 0; width: auto; font: italic 700 16px var(--font-display); color: var(--color-gold-soft); }
+.bf-group__n { flex: none; color: var(--color-ink-soft); font-size: 13px; }
+.bf-group .icon-btn { flex: none; }
+.bf-group .mi-add-btn { margin: 0; }
+.bf-dishes { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.bf-dish { display: inline-flex; align-items: center; gap: 4px; padding: 4px 4px 4px 12px; border: 1px solid rgb(240 168 58 / 0.45); border-radius: 999px; background: rgb(240 168 58 / 0.1); font-size: 14px; }
+.bf-dish button { width: 24px; height: 24px; border: 0; border-radius: 50%; background: transparent; color: var(--color-ink-soft); font-size: 16px; line-height: 1; cursor: pointer; }
+.bf-dish button:hover, .bf-dish button:focus-visible { background: #b3261e; color: #fff; }
+.bf-dish.is-missing { border-style: dashed; border-color: #d98a2b; background: rgb(138 90 18 / 0.3); }
+.bf-new { max-width: 520px; }
+.dish-picker { display: flex; flex-direction: column; gap: 10px; padding: 10px; border: 1px solid var(--color-gold); border-radius: var(--radius-md); background: var(--color-night); }
+.dish-picker__bar { display: flex; gap: 8px; }
+.editor .dish-picker__bar input { flex: 1; width: auto; min-width: 0; }
+.dish-picker__sections { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 2px; scrollbar-width: thin; }
+.dish-picker__sections .chipbtn { flex: none; padding: 4px 10px; font-size: 13px; }
+.dish-picker__list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr)); gap: 6px; max-height: 300px; margin: 0; padding: 0; overflow: auto; list-style: none; }
+.dish-opt { display: grid; grid-template-columns: 24px 1fr; grid-template-areas: "tick name" "tick sec"; align-items: center; column-gap: 8px; width: 100%; min-height: 48px; padding: 6px 10px; border: 1px solid var(--color-line); border-radius: var(--radius-sm); background: transparent; color: var(--color-ink); font: 14px var(--font-body); text-align: left; cursor: pointer; }
+.dish-opt:hover:not(:disabled), .dish-opt:focus-visible { border-color: var(--color-gold); background: rgb(240 168 58 / 0.1); }
+.dish-opt.is-on { border-color: var(--color-gold); background: rgb(240 168 58 / 0.2); }
+.dish-opt:disabled { opacity: 0.45; cursor: not-allowed; }
+.dish-opt__tick { grid-area: tick; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--color-gold); color: var(--color-gold-soft); font-weight: 700; }
+.dish-opt.is-on .dish-opt__tick { background: var(--color-gold); color: var(--color-on-gold); }
+.dish-opt__name { grid-area: name; font-weight: 600; line-height: 1.2; }
+.dish-opt__sec { grid-area: sec; color: var(--color-ink-soft); font-size: 12px; }
+.picker--inline .picker__list { position: static; box-shadow: none; }
+.picker--inline + .picked { margin-top: 8px; }

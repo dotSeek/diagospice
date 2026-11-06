@@ -11,6 +11,7 @@ const CTA: Record<Venue, { label: string; href: string }> = {
   delivery: { label: "Order now", href: restaurant.whatsappUrl },
   restaurant: { label: "Explore restaurant menu", href: "/restaurant-menu/" },
   bar: { label: "Explore bar menu", href: "/bar-menu/" },
+  buffet: { label: "See the buffet menu", href: "/restaurant-menu/#buffet" },
 };
 
 /** One confirmed offer: photo, menu badge, value, dishes, terms and a call to action. */

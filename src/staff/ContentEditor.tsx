@@ -19,6 +19,7 @@ const previewUrl: Record<Venue, string> = {
   delivery: "/?preview=1#menu",
   restaurant: "/restaurant-menu/?preview=1",
   bar: "/bar-menu/?preview=1",
+  buffet: "/restaurant-menu/?preview=1#buffet",
 };
 
 // One tap conditions per venue. Staff can still type their own.
@@ -26,11 +27,13 @@ const QUICK_CONDITIONS: Record<Venue, string[]> = {
   delivery: ["First delivery order only", "Delivery orders only", "One offer per order"],
   restaurant: ["Dine in only", "One offer per table", "Not with other offers"],
   bar: ["Bar only", "One offer per customer", "Not with other offers"],
+  buffet: ["Buffet only", "Dine in only", "Not with other offers"],
 };
 
-const NEW_TITLE: Record<Venue, string> = { delivery: "First Order Special", restaurant: "Opening Special", bar: "Bar Opening Special" };
-const AUDIENCE: Record<Venue, string> = { delivery: "New delivery customers", restaurant: "Dine in customers", bar: "Bar customers" };
-const DEFAULT_CONDITION: Record<Venue, string> = { delivery: "Delivery orders only", restaurant: "Dine in only", bar: "Bar only" };
+const NEW_TITLE: Record<Venue, string> = { delivery: "First Order Special", restaurant: "Opening Special", bar: "Bar Opening Special", buffet: "Buffet Special" };
+const AUDIENCE: Record<Venue, string> = { delivery: "New delivery customers", restaurant: "Dine in customers", bar: "Bar customers", buffet: "Buffet guests" };
+const DEFAULT_CONDITION: Record<Venue, string> = { delivery: "Delivery orders only", restaurant: "Dine in only", bar: "Bar only", buffet: "Buffet only" };
+const OFFERS_HEADING: Record<Venue, string> = { delivery: "Delivery offers", restaurant: "Restaurant opening offers", bar: "Bar opening offers", buffet: "Buffet Special offers" };
 
 const api = async (url: string, init?: RequestInit) => {
   const res = await fetch(url, { credentials: "same-origin", ...init, headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) } });
@@ -168,6 +171,14 @@ export function ContentEditor() {
     change(next);
   };
 
+  /** Buffet price changes keep each buffet offer's regular price in step. */
+  const changeBuffet = (buffet: BuffetInfo) => {
+    const next = { ...structuredClone(doc), buffet };
+    const latest = menuPrices(next);
+    for (const offer of next.offers) for (const item of offer.items) item.originalPrice = latest.get(item.name) ?? item.originalPrice;
+    change(next);
+  };
+
   const state = dirty ? "unsaved" : loaded.hasDraft ? "draft" : "live";
 
   return (
@@ -187,13 +198,15 @@ export function ContentEditor() {
       {/* Offers */}
       <section className="ed-section" aria-labelledby="offers-h">
         <div className="ed-section__head">
-          <h3 id="offers-h">{venue === "delivery" ? "Delivery offers" : venue === "bar" ? "Bar opening offers" : "Restaurant opening offers"}</h3>
+          <h3 id="offers-h">{OFFERS_HEADING[venue]}</h3>
           <button type="button" className="btn btn--gold btn--small" onClick={addOffer}>
             + Add new offer
           </button>
         </div>
         <p className="editor__hint">
-          These only ever appear on the {VENUE_TITLE[venue].toLowerCase()}, marked "{OFFER_LABEL[venue]}". Only enter offers the business has confirmed.
+          These only ever appear on the {VENUE_TITLE[venue].toLowerCase()}, marked "{OFFER_LABEL[venue]}".{" "}
+          {venue === "buffet" ? "Pick the adult or kids buffet price and enter the offer price. Restaurant menu prices never change. " : ""}
+          Only enter offers the business has confirmed.
         </p>
         {doc.offers.length === 0 ? <p className="ed-empty">No offers yet. Press "Add new offer" to create one.</p> : null}
         <div className="offer-cards">
@@ -212,11 +225,12 @@ export function ContentEditor() {
         </div>
       </section>
 
-      {/* Weekend buffet (restaurant only) */}
-      {venue === "restaurant" && doc.buffet ? <BuffetEditor buffet={doc.buffet} onChange={(buffet) => change({ ...doc, buffet })} /> : null}
+      {/* Buffet Special Menu: its own prices, plus dishes picked from the restaurant menu */}
+      {venue === "buffet" && doc.buffet ? <BuffetEditor buffet={doc.buffet} onChange={changeBuffet} /> : null}
 
-      {/* Prices */}
-      <MenuItemsEditor doc={doc} onChange={changeMenu} />
+      {/* Prices (the buffet has no menu items of its own) */}
+      {venue === "buffet" ? null : <MenuItemsEditor doc={doc} onChange={changeMenu} />}
+      {venue === "restaurant" ? <p className="editor__hint">The weekend buffet has its own tab, Buffet Special Menu, with its own prices and offers.</p> : null}
 
       {/* Save and publish bar */}
       <div className={`ed-bar ed-bar--${state}`} role="region" aria-label="Save and publish">
@@ -338,8 +352,11 @@ function OfferCard({
           <div className="step">
             <span className="step__n">2</span>
             <div className="step__body">
-              <p className="step__title">{offer.venue === "bar" ? "Drinks and items on offer" : "Dishes on offer"}{offer.venue === "delivery" ? " (optional)" : ""}</p>
-              <ItemPicker prices={prices} taken={offer.items.map((item) => item.name)} onPick={(name) => onChange({ items: [...offer.items, { name, originalPrice: prices.get(name) ?? 0, offerPrice: NaN }] })} />
+              <p className="step__title">
+                {offer.venue === "bar" ? "Drinks and items on offer" : offer.venue === "buffet" ? "Buffet prices on offer" : "Dishes on offer"}
+                {offer.venue === "delivery" ? " (optional)" : ""}
+              </p>
+              <ItemPicker showAll={offer.venue === "buffet"} prices={prices} taken={offer.items.map((item) => item.name)} onPick={(name) => onChange({ items: [...offer.items, { name, originalPrice: prices.get(name) ?? 0, offerPrice: NaN }] })} />
               {offer.items.length ? (
                 <ul className="picked">
                   {offer.items.map((item, index) => {
@@ -439,13 +456,16 @@ function OfferCard({
 }
 
 /** Type to search the venue's menu, then click a result to add it. */
-function ItemPicker({ prices, taken, onPick }: { prices: Map<string, number>; taken: string[]; onPick: (name: string) => void }) {
+function ItemPicker({ prices, taken, onPick, showAll = false }: { prices: Map<string, number>; taken: string[]; onPick: (name: string) => void; showAll?: boolean }) {
   const [query, setQuery] = useState("");
   const matches = [...prices.entries()].filter(([name]) => !taken.includes(name) && name.toLowerCase().includes(query.trim().toLowerCase())).slice(0, 8);
+  if (showAll && !matches.length && !query) return null;
   return (
-    <div className="picker">
-      <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search the menu, for example Kottu" aria-label="Search the menu to add an item" />
-      {query.trim() ? (
+    <div className={`picker${showAll ? " picker--inline" : ""}`}>
+      {showAll ? null : (
+        <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search the menu, for example Kottu" aria-label="Search the menu to add an item" />
+      )}
+      {showAll || query.trim() ? (
         <ul className="picker__list">
           {matches.length ? (
             matches.map(([name, price]) => (
@@ -514,24 +534,62 @@ function CustomConditions({ conditions, onChange }: { conditions: string[]; onCh
   );
 }
 
-// ---------- weekend buffet ----------
+// ---------- Buffet Special Menu ----------
+
+type BuffetGroupData = NonNullable<BuffetInfo["groups"]>[number];
+interface RestaurantDish {
+  name: string;
+  section: string;
+}
+
+/** Dishes (not deals) from the restaurant menu, which the buffet picks from instead of copying. */
+const restaurantDishes = (doc: MenuDoc): RestaurantDish[] =>
+  doc.categories.flatMap((category) => (category.kind === "items" ? category.items.map((item) => ({ name: item.name, section: category.label })) : []));
 
 function BuffetEditor({ buffet, onChange }: { buffet: BuffetInfo; onChange: (buffet: BuffetInfo) => void }) {
   const set = (patch: Partial<BuffetInfo>) => onChange({ ...buffet, ...patch });
+  const [menu, setMenu] = useState<RestaurantDish[] | null>(null);
+  const [menuError, setMenuError] = useState("");
+  const [picking, setPicking] = useState<number | null>(null);
+  const [newSection, setNewSection] = useState("");
+
+  // The restaurant menu as admins see it (draft if there is one), so new dishes can be picked straight away.
+  useEffect(() => {
+    api("/api/staff/content?venue=restaurant")
+      .then((data: Loaded) => setMenu(restaurantDishes(data.doc)))
+      .catch((error: Error) => setMenuError(error.message));
+  }, []);
+
+  const groups = buffet.groups ?? [];
+  const setGroups = (next: BuffetGroupData[]) => set({ groups: next });
+  const onMenu = new Set(menu?.map((dish) => dish.name));
+  const groupOf = new Map(groups.flatMap((group) => group.items.map((item) => [item, group.title] as const)));
+  const missing = menu ? groups.flatMap((group) => group.items).filter((item) => !onMenu.has(item)) : [];
+  const total = groups.reduce((sum, group) => sum + group.items.length, 0);
+
+  const updateGroup = (index: number, patch: Partial<BuffetGroupData>) => setGroups(groups.map((group, i) => (i === index ? { ...group, ...patch } : group)));
+  const addSection = () => {
+    const title = newSection.trim().replace(/\s+/g, " ");
+    if (!title || groups.some((group) => group.title.toLowerCase() === title.toLowerCase())) return;
+    setGroups([...groups, { title, items: [] }]);
+    setNewSection("");
+    setPicking(groups.length);
+  };
+
   return (
     <section className="ed-section" aria-labelledby="buffet-h">
       <div className="ed-section__head">
-        <h3 id="buffet-h">Weekend buffet</h3>
+        <h3 id="buffet-h">Buffet prices and times</h3>
       </div>
-      <p className="editor__hint">Shown on the website, the restaurant QR menu and the leaflet. Dine in only.</p>
+      <p className="editor__hint">Buffet prices belong to the buffet only. Changing them never changes a restaurant menu price. Shown on the website and the restaurant QR menu.</p>
       <div className="buffet-form">
         <label>
           Days
-          <input value={buffet.days} onChange={(event) => set({ days: event.target.value })} />
+          <input value={buffet.days} onChange={(event) => set({ days: event.target.value })} maxLength={80} />
         </label>
         <label>
           Hours
-          <input value={buffet.hours} onChange={(event) => set({ hours: event.target.value })} />
+          <input value={buffet.hours} onChange={(event) => set({ hours: event.target.value })} maxLength={80} />
         </label>
         <label>
           Adult price £
@@ -543,14 +601,159 @@ function BuffetEditor({ buffet, onChange }: { buffet: BuffetInfo; onChange: (buf
         </label>
         <label>
           Kids note
-          <input value={buffet.kidsNote} onChange={(event) => set({ kidsNote: event.target.value })} />
+          <input value={buffet.kidsNote} onChange={(event) => set({ kidsNote: event.target.value })} maxLength={80} />
         </label>
         <label>
           Booking phone
-          <input value={buffet.bookingPhone} onChange={(event) => set({ bookingPhone: event.target.value })} />
+          <input value={buffet.bookingPhone} onChange={(event) => set({ bookingPhone: event.target.value })} maxLength={80} />
         </label>
       </div>
+
+      <div className="ed-section__head bf-head">
+        <h3>
+          Dishes on the buffet <span className="bf-count">{total}</span>
+        </h3>
+      </div>
+      <p className="editor__hint">Pick dishes from the restaurant menu. Nothing is copied or duplicated, and restaurant prices stay as they are.</p>
+      {menuError ? <p className="editor__warn">The restaurant menu could not load ({menuError}). You can still remove dishes.</p> : null}
+      {missing.length ? (
+        <div className="todo" role="status">
+          <p>Not on the restaurant menu any more (renamed or removed). Remove them, or add them to the restaurant menu first:</p>
+          <ul>
+            {missing.map((name) => (
+              <li key={name}>{name}</li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
+      <div className="bf-groups">
+        {groups.map((group, index) => (
+          <div className="bf-group" key={index}>
+            <div className="bf-group__head">
+              <input className="bf-group__title" value={group.title} maxLength={40} onChange={(event) => updateGroup(index, { title: event.target.value })} aria-label="Section name" />
+              <span className="bf-group__n">{group.items.length} dishes</span>
+              <button
+                type="button"
+                className="icon-btn"
+                aria-label={`Remove the ${group.title} section`}
+                onClick={() => {
+                  if (group.items.length && !window.confirm(`Remove the ${group.title} section and its ${group.items.length} dishes from the buffet?`)) return;
+                  setGroups(groups.filter((_, i) => i !== index));
+                  setPicking(null);
+                }}
+              >
+                ×
+              </button>
+            </div>
+            {group.items.length ? (
+              <ul className="bf-dishes">
+                {group.items.map((item) => {
+                  const lost = Boolean(menu) && !onMenu.has(item);
+                  return (
+                    <li key={item} className={`bf-dish${lost ? " is-missing" : ""}`} title={lost ? "Not on the restaurant menu" : undefined}>
+                      {item}
+                      <button type="button" aria-label={`Remove ${item} from the buffet`} onClick={() => updateGroup(index, { items: group.items.filter((entry) => entry !== item) })}>
+                        ×
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <p className="ed-empty">No dishes yet.</p>
+            )}
+            {picking === index ? (
+              <DishPicker
+                menu={menu}
+                group={group}
+                groupOf={groupOf}
+                onToggle={(name) => updateGroup(index, { items: group.items.includes(name) ? group.items.filter((entry) => entry !== name) : [...group.items, name] })}
+                onDone={() => setPicking(null)}
+              />
+            ) : (
+              <button type="button" className="mi-add-btn" disabled={!menu} onClick={() => setPicking(index)}>
+                + Add dishes to {group.title || "this section"}
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <div className="custom-conds__add bf-new">
+        <input
+          value={newSection}
+          maxLength={40}
+          onChange={(event) => setNewSection(event.target.value)}
+          onKeyDown={(event) => event.key === "Enter" && (event.preventDefault(), addSection())}
+          placeholder="New buffet section, for example Grill"
+          aria-label="New buffet section name"
+        />
+        <button type="button" className="btn btn--outline btn--small" onClick={addSection}>
+          Add section
+        </button>
+      </div>
     </section>
+  );
+}
+
+/** Tap restaurant dishes to add them to a buffet section (tap again to take them out). */
+function DishPicker({
+  menu,
+  group,
+  groupOf,
+  onToggle,
+  onDone,
+}: {
+  menu: RestaurantDish[] | null;
+  group: BuffetGroupData;
+  groupOf: Map<string, string>;
+  onToggle: (name: string) => void;
+  onDone: () => void;
+}) {
+  const [query, setQuery] = useState("");
+  const [section, setSection] = useState("All");
+  if (!menu) return <p className="ed-empty">Loading the restaurant menu...</p>;
+  const sections = ["All", ...new Set(menu.map((dish) => dish.section))];
+  const q = query.trim().toLowerCase();
+  const shown = menu.filter((dish) => (section === "All" || dish.section === section) && (!q || dish.name.toLowerCase().includes(q)));
+  return (
+    <div className="dish-picker">
+      <div className="dish-picker__bar">
+        <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search the restaurant menu" aria-label="Search the restaurant menu" autoFocus />
+        <button type="button" className="btn btn--gold btn--small" onClick={onDone}>
+          Done
+        </button>
+      </div>
+      <div className="chips dish-picker__sections" role="group" aria-label="Restaurant menu sections">
+        {sections.map((name) => (
+          <button key={name} type="button" className={`chipbtn${section === name ? " is-on" : ""}`} aria-pressed={section === name} onClick={() => setSection(name)}>
+            {name}
+          </button>
+        ))}
+      </div>
+      <ul className="dish-picker__list">
+        {shown.length ? (
+          shown.map((dish) => {
+            const here = group.items.includes(dish.name);
+            const elsewhere = !here ? groupOf.get(dish.name) : undefined;
+            return (
+              <li key={dish.name}>
+                <button type="button" className={`dish-opt${here ? " is-on" : ""}`} aria-pressed={here} disabled={Boolean(elsewhere)} onClick={() => onToggle(dish.name)}>
+                  <span className="dish-opt__tick" aria-hidden="true">
+                    {here ? "✓" : "+"}
+                  </span>
+                  <span className="dish-opt__name">{dish.name}</span>
+                  <span className="dish-opt__sec">{elsewhere ? `In ${elsewhere}` : dish.section}</span>
+                </button>
+              </li>
+            );
+          })
+        ) : (
+          <li className="picker__none">No restaurant dish matches "{query}".</li>
+        )}
+      </ul>
+    </div>
   );
 }
 

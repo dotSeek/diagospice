@@ -1,11 +1,11 @@
 
 import { LazyMotion, MotionConfig, domAnimation } from "motion/react";
-import { formatPrice } from "../data/menu";
 import { OFFER_LABEL } from "../data/content";
 import { ItemOffersContext, useMenuDoc } from "../data/useContent";
 import type { ItemOffer } from "../data/useContent";
 import { restaurant } from "../data/restaurant";
 import { MenuCategory } from "../components/menu/MenuCategory";
+import { BuffetMenu } from "../components/menu/BuffetMenu";
 import { PromotionCard } from "../components/offers/PromotionCard";
 import { RevealGroup } from "../components/motion/Reveal";
 
@@ -45,6 +45,7 @@ export function TableMenu({ venue }: { venue: Venue }) {
                     {category.label}
                   </a>
                 ))}
+                {venue === "restaurant" ? <a href="#buffet">Buffet Special Menu</a> : null}
               </nav>
             ) : null}
           </header>
@@ -69,24 +70,17 @@ export function TableMenu({ venue }: { venue: Venue }) {
               <p className="table-status">Loading the menu...</p>
             ) : (
               <>
-                {data.buffet ? (
-                  <div className="buffet-strip table-buffet">
-                    <span className="buffet-strip__badge">Weekend buffet</span>
-                    <span className="buffet-strip__item">{data.buffet.days}</span>
-                    <span className="buffet-strip__item">{data.buffet.hours}</span>
-                    <span className="buffet-strip__item">
-                      <b>{formatPrice(data.buffet.adultPrice)}</b> adults
-                    </span>
-                    <span className="buffet-strip__item">
-                      <b>{formatPrice(data.buffet.kidsPrice)}</b> kids under 10
-                    </span>
-                  </div>
-                ) : null}
                 <div className="table-grid">
                   {data.categories.map((category) => (
                     <MenuCategory key={category.id} category={category} />
                   ))}
                 </div>
+                {/* The buffet has its own document, prices and offers; restaurant prices never change it. */}
+                {venue === "restaurant" ? (
+                  <section className="table-buffet" aria-label="Buffet Special Menu">
+                    <BuffetMenu preview={preview} />
+                  </section>
+                ) : null}
               </>
             )}
           </main>

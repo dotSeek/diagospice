@@ -8,15 +8,16 @@ const photo: Record<Venue, string> = {
   delivery: galleryImages.find((image) => image.caption === "Burgers")?.thumb ?? heroImage,
   restaurant: galleryImages.find((image) => image.caption === "Curry and nan")?.thumb ?? heroImage,
   bar: galleryImages.find((image) => image.caption === "Bar atmosphere")?.thumb ?? heroImage,
+  buffet: galleryImages.find((image) => image.caption === "Curry and nan")?.thumb ?? heroImage,
 };
 
 /**
- * Grand Opening Specials: one card per live offer, in delivery, restaurant, bar order.
+ * Grand Opening Specials: one card per live offer, in delivery, restaurant, buffet, bar order.
  * Renders nothing until an admin publishes a fully confirmed offer.
  */
 export function GrandOpeningSpecials() {
   const offers = useLiveOffers();
-  const live = offers ? [...offers.delivery, ...offers.restaurant, ...offers.bar] : [];
+  const live = offers ? [...offers.delivery, ...offers.restaurant, ...(offers.buffet ?? []), ...offers.bar] : [];
   if (!live.length) return null;
   return (
     <section id="grand-opening" className="section-block promos" aria-labelledby="grand-opening-title">

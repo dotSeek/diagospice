@@ -1,6 +1,6 @@
+import { BuffetPriceText } from "../menu/BuffetMenu";
 import type { ReactNode } from "react";
 import { heroImage } from "../../data/images";
-import { formatPrice } from "../../data/menu";
 import { useBuffet } from "../../data/useContent";
 import { restaurant } from "../../data/restaurant";
 import { BadgeIcon } from "../ui/BadgeIcon";
@@ -40,10 +40,10 @@ export function HeroSection() {
         <span className="buffet-strip__item">{buffet.days}</span>
         <span className="buffet-strip__item">{buffet.hours}</span>
         <span className="buffet-strip__item">
-          <b>{formatPrice(buffet.adultPrice)}</b> adults
+          <BuffetPriceText value={buffet.adult} /> adults
         </span>
         <span className="buffet-strip__item">
-          <b>{formatPrice(buffet.kidsPrice)}</b> {buffet.kidsNote.toLowerCase().replace(/ years?$/, "")}
+          <BuffetPriceText value={buffet.kids} /> {buffet.kidsNote.toLowerCase().replace(/ years?$/, "")}
         </span>
       </Reveal>
       <div className="hero__photo" style={{ backgroundImage: `url(${heroImage})` }}>

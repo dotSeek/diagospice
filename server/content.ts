@@ -85,7 +85,32 @@ const seed = (venue: Venue): MenuDoc => {
 
 const asVenue = (value: string | null): Venue | null => (VENUES as string[]).includes(value ?? "") ? (value as Venue) : null;
 
-export const published = async (venue: Venue): Promise<MenuDoc> => (await getStore().get(venue, "published")) ?? seed(venue);
+/** The buffet starts from the weekend buffet details already published on the restaurant menu
+ *  (or the built in ones), so moving it into its own document changes nothing for customers. */
+const seedBuffet = async (): Promise<MenuDoc> => {
+  const restaurantDoc = (await getStore().get("restaurant", "published")) ?? seed("restaurant");
+  const base = restaurantDoc.buffet ?? buffet;
+  return {
+    venue: "buffet",
+    title: "Buffet Special Menu",
+    note: "All you can eat, dine in only.",
+    categories: [],
+    buffet: {
+      days: base.days,
+      hours: base.hours,
+      bookingPhone: base.bookingPhone,
+      adultPrice: base.adultPrice,
+      kidsPrice: base.kidsPrice,
+      kidsNote: base.kidsNote,
+      groups: structuredClone(base.groups?.length ? base.groups : buffet.groups),
+    },
+    offers: seedOffers("buffet"),
+    updated: "2026-11-06T00:00:00.000Z",
+  };
+};
+
+export const published = async (venue: Venue): Promise<MenuDoc> =>
+  (await getStore().get(venue, "published")) ?? (venue === "buffet" ? await seedBuffet() : seed(venue));
 const draft = async (venue: Venue): Promise<MenuDoc> => (await getStore().get(venue, "draft")) ?? (await published(venue));
 
 /** Removes internal fields and anything that is not live before a document goes to customers. */
@@ -99,7 +124,7 @@ const isAdmin = (req: IncomingMessage): boolean => currentSession(req)?.role ===
 
 // ---------- public ----------
 
-/** GET /api/menu?name=delivery|restaurant|bar (add &draft=1 as a signed in admin to preview). */
+/** GET /api/menu?name=delivery|restaurant|bar|buffet (add &draft=1 as a signed in admin to preview). */
 // Prices and offers must never linger after an admin switches them off. Browsers always check with
 // the server (they also honour stale-while-revalidate, so it must not reach them). Only Vercel's edge
 // keeps a shared copy, through Vercel-CDN-Cache-Control, which Vercel strips before the response

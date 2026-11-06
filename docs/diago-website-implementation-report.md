@@ -5,7 +5,7 @@ Date: 6 November 2026. Not committed, pushed or deployed (awaiting approval).
 ## What was built
 
 ### 1. Content model and storage
-- `src/data/content.ts`: typed menu document per venue (delivery, restaurant, bar) holding its own
+- `src/data/content.ts`: typed menu document per venue (delivery, restaurant, bar, buffet) holding its own
   categories, buffet and offers; offer rules (`offerProblems`, `liveOffers`, `docProblems`); badge labels
   (Delivery only, Opening Special, Bar Opening Special). No runtime imports, so the site, API and scripts share it.
 - `server/content.ts`: draft and published documents per venue.
@@ -16,7 +16,7 @@ Date: 6 November 2026. Not committed, pushed or deployed (awaiting approval).
 ### 2. API
 | Route | Access | Purpose |
 |-------|--------|---------|
-| `GET /api/menu?name=delivery\|restaurant\|bar` | Public | Published menu with live offers only (source removed). Cached 30 to 60 s. |
+| `GET /api/menu?name=delivery\|restaurant\|bar\|buffet` | Public | Published menu with live offers only (source removed). Cached 30 to 60 s. |
 | `GET /api/menu?name=...&draft=1` | Admin | Draft preview |
 | `GET /api/offers` | Public | Live offers per venue for the website |
 | `GET/PUT /api/staff/content?venue=` | Admin | Load or save a draft (validated) |
@@ -38,6 +38,13 @@ Admin routes need the signed admin cookie, same origin and JSON. The staff role 
 - **Hero**: "Resto Bar" line under the name, "Delivery menu" button, and a dine in line
   ("Scan the QR code on your table for our restaurant and bar menus").
 
+- **Buffet Special Menu**: its own document (`venue: "buffet"`) with days, hours, adult and kids prices,
+  dish sections and its own offers. Dishes are picked from the restaurant menu by name, never copied, so
+  restaurant prices stay separate. Buffet offers discount the "Adult buffet" or "Kids buffet" price.
+  Shown on the website (same buffet section style, sections and dishes from the backend), on the
+  restaurant QR menu as its own section (`/restaurant-menu/#buffet`, so the printed QR codes keep working)
+  and on `/offers/`. Until an admin publishes it, it starts from the buffet details already published.
+
 ### 4. Admin dashboard (`/staff/`, admin only)
 - **Menus and offers** editor (`src/staff/ContentEditor.tsx`): tabs for Delivery, Restaurant, Bar;
   menu items per section (change a price, add a new dish, drink or deal, edit its name and note, remove it;
@@ -45,6 +52,10 @@ Admin routes need the signed admin cookie, same origin and JSON. The staff role 
   60 characters, `<` or `>`, and deals with nothing listed); weekend buffet details; offers with on/off, title, offer, description, discounted items with
   live regular price, conditions, optional start and end dates, source; live "why hidden" checks;
   Save draft, Preview draft, Publish, Discard draft.
+- **Buffet Special Menu tab**: Buffet Special offers, prices and times, and dish sections. "Add dishes"
+  opens a picker of restaurant dishes (search plus section filters, tap to add or remove, dishes already in
+  another buffet section are greyed out). Sections can be added, renamed and removed. Dishes no longer on
+  the restaurant menu are listed as a warning. Changing a buffet price updates its offers' regular price.
 - **Table QR codes** (`src/staff/qrAdmin.ts`): previews, Download print PDF (A6 card + A4 poster),
   PNG, SVG, quick Print table card, Open menu. Codes always point at the live site.
 - **Entrance offers poster** (`renderPosterAdmin` in `src/staff/qrAdmin.ts`): preview, Download A4 PDF,

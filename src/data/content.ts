@@ -2,15 +2,21 @@
 // dashboard, the serverless API and the PDF scripts. It has no runtime imports on purpose,
 // so every one of those can load it.
 //
-// Each venue (delivery, restaurant, bar) is one document holding its own menu AND its own
-// offers. Offers can therefore never leak between venues: a restaurant offer cannot touch
+// Each venue (delivery, restaurant, bar, buffet) is one document holding its own menu AND its own
+// offers. The buffet document has no menu sections of its own: its dishes are picked from the
+// restaurant menu by name, and its two prices (adults, kids) live only in the buffet document, so
+// buffet pricing and buffet offers never change a restaurant price. Offers can therefore never leak between venues: a restaurant offer cannot touch
 // a bar price, and a delivery offer never appears on a dine in menu.
 //
 // Customers only ever see the PUBLISHED document, and only offers that pass liveOffers().
 import type { BuffetGroup, MenuCategoryData } from "./menu";
 
-export type Venue = "delivery" | "restaurant" | "bar";
-export const VENUES: Venue[] = ["delivery", "restaurant", "bar"];
+export type Venue = "delivery" | "restaurant" | "bar" | "buffet";
+export const VENUES: Venue[] = ["delivery", "restaurant", "bar", "buffet"];
+
+/** Offer item names for the two buffet prices. Buffet offers discount these, never a dish. */
+export const BUFFET_ADULT = "Adult buffet";
+export const BUFFET_KIDS = "Kids buffet";
 
 export const PENDING = "PENDING BUSINESS CONFIRMATION";
 
@@ -70,12 +76,14 @@ export const OFFER_LABEL: Record<Venue, string> = {
   delivery: "Delivery only",
   restaurant: "Opening Special",
   bar: "Bar Opening Special",
+  buffet: "Buffet Special",
 };
 
 export const VENUE_TITLE: Record<Venue, string> = {
   delivery: "Delivery menu",
   restaurant: "Restaurant menu",
   bar: "Bar menu",
+  buffet: "Buffet Special Menu",
 };
 
 /** Offer templates per venue. Every field waits for business confirmation. */
@@ -85,13 +93,18 @@ export const seedOffers = (venue: Venue): Offer[] => {
     return [{ ...base, id: "first-order-special", title: "First Order Special", venue, audience: "New delivery customers" }];
   if (venue === "restaurant")
     return [{ ...base, id: "restaurant-opening-offer", title: "Restaurant Opening Offer", venue, audience: "Dine in customers", conditions: ["Dine in only", PENDING] }];
+  if (venue === "buffet") return [];
   return [{ ...base, id: "bar-opening-offer", title: "Bar Opening Offer", venue, audience: "Bar customers", conditions: ["Bar only", PENDING] }];
 };
 
 const round2 = (value: number): number => Math.round(value * 100) / 100;
 
-export const menuPrices = (doc: Pick<MenuDoc, "categories">): Map<string, number> => {
+export const menuPrices = (doc: Pick<MenuDoc, "categories"> & { venue?: Venue; buffet?: BuffetInfo }): Map<string, number> => {
   const prices = new Map<string, number>();
+  if (doc.venue === "buffet" && doc.buffet) {
+    prices.set(BUFFET_ADULT, doc.buffet.adultPrice);
+    prices.set(BUFFET_KIDS, doc.buffet.kidsPrice);
+  }
   for (const category of doc.categories) {
     if (category.kind === "items") for (const item of category.items) prices.set(item.name, item.price);
     else for (const deal of category.deals) prices.set(deal.name, deal.price);
@@ -102,7 +115,7 @@ export const menuPrices = (doc: Pick<MenuDoc, "categories">): Map<string, number
 const todayIso = (today: Date): string => today.toISOString().slice(0, 10);
 
 /** Reasons an offer cannot go live. An empty list means it is safe to show customers. */
-export const offerProblems = (offer: Offer, doc: Pick<MenuDoc, "venue" | "categories">, today = new Date()): string[] => {
+export const offerProblems = (offer: Offer, doc: Pick<MenuDoc, "venue" | "categories" | "buffet">, today = new Date()): string[] => {
   const problems: string[] = [];
   if (offer.venue !== doc.venue) problems.push(`It belongs to the ${offer.venue} menu, not the ${doc.venue} menu`);
   if (JSON.stringify(offer).includes(PENDING)) problems.push("Some details still wait for business confirmation");
@@ -110,11 +123,12 @@ export const offerProblems = (offer: Offer, doc: Pick<MenuDoc, "venue" | "catego
   if (!offer.source.trim()) problems.push("Add who confirmed the offer");
   if (offer.starts && offer.expires && offer.starts > offer.expires) problems.push("The start date is after the end date");
   if (offer.expires && offer.expires < todayIso(today)) problems.push("The end date has passed");
-  if (doc.venue !== "delivery" && offer.items.length === 0) problems.push("Add at least one dish or drink with its offer price");
+  if (doc.venue !== "delivery" && offer.items.length === 0)
+    problems.push(doc.venue === "buffet" ? "Add the adult or kids buffet price with its offer price" : "Add at least one dish or drink with its offer price");
   const prices = menuPrices(doc);
   for (const item of offer.items) {
     const price = prices.get(item.name);
-    if (price === undefined) problems.push(`${item.name} is not on the ${doc.venue} menu`);
+    if (price === undefined) problems.push(`${item.name} is not on the ${VENUE_TITLE[doc.venue].toLowerCase()}`);
     else if (round2(price) !== round2(item.originalPrice)) problems.push(`${item.name}: the regular price is now £${price.toFixed(2)}, please re add it`);
     if (!(item.offerPrice > 0) || round2(item.offerPrice) >= round2(item.originalPrice)) problems.push(`${item.name}: enter an offer price below the regular £${item.originalPrice.toFixed(2)}`);
   }
@@ -122,7 +136,7 @@ export const offerProblems = (offer: Offer, doc: Pick<MenuDoc, "venue" | "catego
 };
 
 /** Offers customers may see right now: active, fully confirmed, valid for this venue and in date. */
-export const liveOffers = (doc: Pick<MenuDoc, "venue" | "categories" | "offers"> | null | undefined, today = new Date()): Offer[] =>
+export const liveOffers = (doc: Pick<MenuDoc, "venue" | "categories" | "offers" | "buffet"> | null | undefined, today = new Date()): Offer[] =>
   (doc?.offers ?? []).filter(
     (offer) => offer.active && (!offer.starts || offer.starts <= todayIso(today)) && offerProblems(offer, doc!, today).length === 0,
   );
@@ -152,11 +166,32 @@ export const docProblems = (doc: MenuDoc, venue: Venue): string[] => {
       if (category.kind === "deals" && !("includes" in row && Array.isArray(row.includes) && row.includes.length)) problems.push(`${name}: list what the deal includes.`);
     }
   }
+  if (venue === "buffet" && !doc.buffet) problems.push("Buffet details are missing.");
   if (doc.buffet) {
     const b = doc.buffet;
-    if (!b.days?.trim() || !b.hours?.trim()) problems.push("Weekend buffet: fill in the days and hours.");
+    const text = (value: unknown, max: number) => typeof value === "string" && value.length <= max && !/[<>]/.test(value);
+    if (!b.days?.trim() || !b.hours?.trim()) problems.push("Buffet: fill in the days and hours.");
+    if (![b.days, b.hours, b.bookingPhone, b.kidsNote].every((value) => text(value, 80))) problems.push("Buffet: days, hours, phone and kids note must be plain text under 80 characters.");
     for (const [label, value] of [["adult", b.adultPrice], ["kids", b.kidsPrice]] as const)
-      if (!(typeof value === "number" && value > 0 && value < 1000)) problems.push(`Weekend buffet: the ${label} price must be between £0.01 and £999.`);
+      if (!(typeof value === "number" && value > 0 && value < 1000)) problems.push(`Buffet: the ${label} price must be between £0.01 and £999.`);
+    if (b.groups !== undefined) {
+      if (!Array.isArray(b.groups) || b.groups.length > 20) problems.push("Buffet: the dish sections are not valid.");
+      else {
+        const dishes = new Set<string>();
+        for (const group of b.groups) {
+          if (!text(group?.title, 40) || !group.title.trim()) problems.push("Buffet: every section needs a name under 40 characters.");
+          if (!Array.isArray(group?.items) || group.items.length > 60) {
+            problems.push(`Buffet: ${group?.title ?? "a section"} has no dish list.`);
+            continue;
+          }
+          for (const dish of group.items) {
+            if (!text(dish, 60) || !dish.trim()) problems.push(`Buffet: ${group.title} has a dish name that is empty, too long or contains < or >.`);
+            else if (dishes.has(dish.toLowerCase())) problems.push(`Buffet: ${dish} is in the buffet twice.`);
+            dishes.add(String(dish).toLowerCase());
+          }
+        }
+      }
+    }
   }
   for (const offer of doc.offers ?? []) {
     if (offer.venue !== venue) problems.push(`${offer.title}: it belongs to another menu.`);

@@ -39,7 +39,10 @@
 }
 
 .table-buffet {
-  margin-bottom: var(--space-13);
+  margin-top: var(--space-14);
+  padding-top: var(--space-12);
+  border-top: var(--stroke-1) solid var(--color-line);
+  scroll-margin-top: var(--space-10);
 }
 
 .table-grid {

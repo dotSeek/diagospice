@@ -75,11 +75,12 @@ export async function renderQrAdmin(container: HTMLElement) {
 
 // ---------- Entrance offers poster (A4, glass door or window) ----------
 // The files are built by `npm run poster` into public/poster/. The poster has ONE QR code, for
-// /offers/, which shows the live restaurant and bar offers in separate sections. It carries a link
+// /offers/, which shows the live restaurant, buffet and bar offers in separate sections. It carries a link
 // only, so it stays valid whatever offers are live; this panel shows what customers will see today.
 const poster = "/poster/diago-spice-offers-poster";
 
-const VENUE_NAME = { restaurant: "Restaurant", bar: "Bar" } as const;
+const VENUE_NAME = { restaurant: "Restaurant", buffet: "Buffet", bar: "Bar" } as const;
+const MENU_URL: Record<PosterVenue, string> = { restaurant: "/restaurant-menu/", buffet: "/restaurant-menu/#buffet", bar: "/bar-menu/" };
 type PosterVenue = keyof typeof VENUE_NAME;
 
 const escape = (text: string) => text.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
@@ -94,15 +95,22 @@ const editOffers = (venue: PosterVenue) => {
 const checkDestination = async (venue: PosterVenue) => {
   const res = await fetch(`/api/menu?name=${venue}`, { cache: "no-store" });
   if (!res.ok) throw new Error(`The ${venue} menu did not load (${res.status}).`);
-  const doc = (await res.json()) as { categories: { kind: string; items?: unknown[]; deals?: unknown[] }[]; offers: { title: string; items: { name: string; offerPrice: number }[] }[] };
-  const rows = doc.categories.reduce((sum, category) => sum + (category.items?.length ?? category.deals?.length ?? 0), 0);
+  const doc = (await res.json()) as {
+    categories: { kind: string; items?: unknown[]; deals?: unknown[] }[];
+    buffet?: { groups?: { items: unknown[] }[] };
+    offers: { title: string; items: { name: string; offerPrice: number }[] }[];
+  };
+  const rows =
+    venue === "buffet"
+      ? (doc.buffet?.groups ?? []).reduce((sum, group) => sum + group.items.length, 0)
+      : doc.categories.reduce((sum, category) => sum + (category.items?.length ?? category.deals?.length ?? 0), 0);
   return { rows, offers: doc.offers };
 };
 
 export async function renderPosterAdmin(container: HTMLElement) {
   if (container.dataset.ready) return;
   container.dataset.ready = "1";
-  const venues: PosterVenue[] = ["restaurant", "bar"];
+  const venues: PosterVenue[] = ["restaurant", "buffet", "bar"];
   container.innerHTML = `<div class="poster-admin">
     <a class="poster-admin__preview" href="${poster}.pdf" target="_blank" rel="noopener" title="Open the A4 PDF">
       <img src="${poster}-preview.jpg" alt="Preview of the A4 Special Offers entrance poster" width="900" height="1273" loading="lazy">
@@ -122,7 +130,7 @@ export async function renderPosterAdmin(container: HTMLElement) {
               (venue) => `<li data-venue="${venue}">
             <p class="poster-check__status" aria-live="polite"><b>${VENUE_NAME[venue]}:</b> checking...</p>
             <div class="poster-check__btns">
-              <a class="mini-link" href="/${venue}-menu/" target="_blank" rel="noopener">Open ${VENUE_NAME[venue].toLowerCase()} menu</a>
+              <a class="mini-link" href="${MENU_URL[venue]}" target="_blank" rel="noopener">Open ${VENUE_NAME[venue].toLowerCase()} menu</a>
               <button type="button" class="mini-link" data-edit="${venue}">Manage ${VENUE_NAME[venue].toLowerCase()} offers</button>
             </div>
           </li>`,
@@ -152,8 +160,8 @@ export async function renderPosterAdmin(container: HTMLElement) {
           (offers.length
             ? `${offers.length} offer${offers.length > 1 ? "s" : ""} live: ${offers
                 .map((offer) => `<b>${escape(offer.title)}</b> (${offer.items.map((item) => `${escape(item.name)} £${item.offerPrice.toFixed(2)}`).join(", ")})`)
-                .join(". ")}. Menu of ${rows} items.`
-            : `no offers live, so customers are sent to the regular ${venue} menu (${rows} items).`);
+                .join(". ")}. Menu of ${rows} ${venue === "buffet" ? "dishes" : "items"}.`
+            : `no offers live, so customers are sent to the regular ${venue} menu (${rows} ${venue === "buffet" ? "dishes" : "items"}).`);
       } catch (error) {
         status.classList.add("is-bad");
         status.innerHTML = label + escape((error as Error).message);

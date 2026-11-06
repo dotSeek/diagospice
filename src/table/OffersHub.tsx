@@ -7,11 +7,12 @@ import { RevealGroup } from "../components/motion/Reveal";
 
 /**
  * /offers/ : the one page behind the entrance poster's single QR code. It shows the restaurant
- * offers and the bar offers that are live right now, each in its own section with a link to its
+ * offers, the buffet offers and the bar offers that are live right now, each in its own section with a link to its
  * own full menu, so the two menus stay separate. With no live offers it simply points to the menus.
  */
 const SECTIONS = [
   { venue: "restaurant", title: "Restaurant offers", menu: "/restaurant-menu/", menuLabel: "Restaurant menu", empty: "No restaurant offers right now. Our full food menu is always worth a look." },
+  { venue: "buffet", title: "Buffet Special offers", menu: "/restaurant-menu/#buffet", menuLabel: "Buffet menu", empty: "No buffet offers right now. See what is on the weekend buffet." },
   { venue: "bar", title: "Bar offers", menu: "/bar-menu/", menuLabel: "Bar menu", empty: "No bar offers right now. See our full drinks and bar food menu." },
 ] as const;
 
@@ -27,7 +28,7 @@ export function OffersHub() {
             <img className="table-head__logo" src="/brand/logo.webp" alt="Diago Spice logo" width={640} height={731} />
             <p className="script">Welcome to Diago Spice</p>
             <h1 className="display table-head__title">Special offers</h1>
-            <p className="table-head__note">Restaurant and bar. Always the latest offers and prices.</p>
+            <p className="table-head__note">Restaurant, buffet and bar. Always the latest offers and prices.</p>
             <nav className="hub-pick" aria-label="Menus">
               {SECTIONS.map((section, index) => (
                 <a key={section.venue} className={`btn ${index === 0 ? "btn--gold" : "btn--outline"}`} href={section.menu}>

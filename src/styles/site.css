@@ -1510,6 +1510,29 @@ button.button:hover {
   color: var(--color-gold-soft);
 }
 
+.offer-badge--buffet {
+  background: var(--color-gold-soft);
+  color: var(--color-on-gold);
+}
+
+/* Buffet Special: regular price struck through beside the offer price */
+.buffet-price s,
+.buffet-strip s {
+  margin-right: 0.25em;
+  font-size: 0.62em;
+  font-weight: var(--weight-regular);
+  opacity: 0.7;
+}
+
+.buffet-menu .offer-badge {
+  display: inline-block;
+  margin-bottom: var(--space-6);
+}
+
+.buffet-offers {
+  margin-top: var(--space-12);
+}
+
 .promo-card__title {
   font-family: var(--font-display);
   font-size: var(--text-base);
