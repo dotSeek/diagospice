@@ -15,7 +15,7 @@
       <h1 class="staff__title">In house menus</h1>
 
       <form class="card" id="login" hidden novalidate>
-        <p class="card__lead">Sign in to view and download the restaurant and bar menus.</p>
+        <p class="card__lead">Sign in to view the restaurant and bar menus.</p>
         <label>Username<input name="username" autocomplete="username" required /></label>
         <label>Password<input name="password" type="password" autocomplete="current-password" required /></label>
         <p class="error" id="login-error" role="alert"></p>
@@ -29,13 +29,11 @@
             <h2>Restaurant menu</h2>
             <p>Dine in prices, A4, 8 pages</p>
             <a class="btn btn--gold" href="/api/staff/menu?name=restaurant" data-view="restaurant" data-title="Restaurant menu">View</a>
-            <a class="btn btn--outline" href="/api/staff/menu?name=restaurant&amp;download=1">Download PDF</a>
           </article>
           <article class="menu-card">
             <h2>Bar menu</h2>
             <p>Dine in prices, A4, 7 pages</p>
             <a class="btn btn--gold" href="/api/staff/menu?name=bar" data-view="bar" data-title="Bar menu">View</a>
-            <a class="btn btn--outline" href="/api/staff/menu?name=bar&amp;download=1">Download PDF</a>
           </article>
         </div>
         <button class="btn btn--outline signout" id="signout" type="button">Sign out</button>
