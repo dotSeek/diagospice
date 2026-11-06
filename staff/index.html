@@ -36,6 +36,16 @@
             <a class="btn btn--gold" href="/api/staff/menu?name=bar" data-view="bar" data-title="Bar menu">View</a>
           </article>
         </div>
+        <section class="qr-admin" id="content-admin" hidden aria-labelledby="content-title">
+          <h2 class="qr-admin__title" id="content-title">Menus and offers</h2>
+          <p class="card__lead">Update prices and opening offers for the delivery, restaurant and bar menus. Changes stay as a draft until you publish them.</p>
+          <div id="content-editor"></div>
+        </section>
+        <section class="qr-admin" id="qr-admin" hidden aria-labelledby="qr-title">
+          <h2 class="qr-admin__title" id="qr-title">Table QR codes</h2>
+          <p class="card__lead">Print these for the tables and the bar. Each code always opens the latest published menu and its own offers, so menu or offer changes never need a reprint.</p>
+          <div class="menus" id="qr-cards"></div>
+        </section>
         <button class="btn btn--outline signout" id="signout" type="button">Sign out</button>
       </section>
 

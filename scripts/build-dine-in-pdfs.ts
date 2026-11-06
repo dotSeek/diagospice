@@ -145,10 +145,38 @@ const encrypt = (plain: Buffer): Buffer => {
   return Buffer.concat([iv, cipher.getAuthTag(), body]);
 };
 
-for (const [name, html] of [
+// Menu data for the QR table menus (/restaurant-menu/ and /bar-menu/), encrypted the same way.
+// The public menu API decrypts these, so a menu change only needs a rebuild and deploy;
+// the printed QR codes keep working because their links never change.
+const tableMenus = {
+  restaurant: {
+    venue: "restaurant",
+    title: "Restaurant menu",
+    note: "Dine in prices. Please order with our staff.",
+    categories: [
+      ...["starters", "mains", "rice", "specials", "burgers", "chips", "nan", "desserts"].map((id) => byId(restaurantItems, id)),
+      ...restaurantDeals,
+    ],
+    buffet,
+  },
+  bar: {
+    venue: "bar",
+    title: "Bar menu",
+    note: "Bar prices. Please order at the bar.",
+    categories: ["bar-starters", "bar-soup", "bar-mains", "bar-nan", "bar-rice", "bar-specials", "bar-burgers", "bar-chips", "bar-desserts", "bar-soft-drinks"].map((id) => byId(barItems, id)),
+  },
+};
+for (const [venue, data] of Object.entries(tableMenus)) {
+  const json = Buffer.from(JSON.stringify({ ...data, updated: new Date().toISOString().slice(0, 10) }));
+  writeFileSync(join(encryptedDir, `${venue}-menu.json.enc`), encrypt(json));
+  console.log(`Encrypted private/encrypted/${venue}-menu.json.enc`);
+}
+
+// MENU_DATA_ONLY=1 refreshes the table menu data without re-rendering the PDFs.
+for (const [name, html] of process.env.MENU_DATA_ONLY ? [] : ([
   ["diago-spice-restaurant-menu", restaurantMenu],
   ["diago-spice-bar-menu", barMenu],
-] as const) {
+] as const)) {
   const pdfPath = join(plainDir, `${name}.pdf`);
   renderPdf(html, pdfPath, process.env.MENU_PREVIEW ? `${process.env.MENU_PREVIEW}-${name}.html` : undefined);
   writeFileSync(join(encryptedDir, `${name}.pdf.enc`), encrypt(readFileSync(pdfPath)));

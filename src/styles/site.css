@@ -858,6 +858,35 @@ button {
   line-height: 1.05;
 }
 
+.hero__resto {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-8);
+  margin-top: var(--space-2);
+  font-family: var(--font-display);
+  font-size: clamp(var(--text-xs), 2.4cqw, var(--text-base));
+  font-style: italic;
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--color-gold-soft);
+}
+
+.hero__resto::before,
+.hero__resto::after {
+  content: "";
+  width: clamp(24px, 8cqw, 120px);
+  height: var(--stroke-1);
+  background: var(--color-gold);
+}
+
+.hero__dine-in {
+  margin-top: var(--space-8);
+  font-size: var(--text-fine);
+  color: var(--color-ink-soft);
+}
+
 .hero__lead {
   margin-bottom: var(--space-4);
   font-family: var(--font-display);
@@ -1173,6 +1202,34 @@ button.button:hover {
   white-space: nowrap;
 }
 
+/* dishes with a live opening offer */
+.menu-item--offer {
+  padding: var(--space-4) var(--space-6);
+  border: var(--stroke-1) solid var(--color-gold);
+  border-radius: var(--radius-md);
+  background: rgb(196 6 12 / 0.12);
+}
+
+.menu-item__badge {
+  display: inline-block;
+  margin-bottom: var(--space-2);
+  padding: 0 var(--space-6);
+  border-radius: var(--radius-pill);
+  background: var(--gradient-gold);
+  color: var(--color-on-gold);
+  font-size: var(--text-fine);
+  font-weight: var(--weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.menu-item__was {
+  margin-right: var(--space-2);
+  font-size: 0.8em;
+  font-weight: var(--weight-regular);
+  color: var(--color-ink-soft);
+}
+
 .menu-item__note {
   display: block;
   font-size: var(--text-xs);
@@ -1388,6 +1445,126 @@ button.button:hover {
 
 .wa-float__label {
   padding-right: var(--space-6);
+}
+
+/* Grand opening promotions (render only when an offer is published) */
+.promos__lead {
+  margin-top: var(--space-4);
+  color: var(--color-ink-soft);
+}
+
+.promos__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 380px));
+  justify-content: center;
+  gap: var(--space-10);
+  perspective: 1200px;
+}
+
+.promo-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: var(--stroke-1) solid var(--color-line);
+  border-radius: var(--radius-md);
+  background: linear-gradient(180deg, rgb(240 168 58 / 0.08), rgb(196 6 12 / 0.1));
+  box-shadow: var(--shadow-card);
+}
+
+.promo-card__img {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+}
+
+.promo-card__body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-9);
+}
+
+.offer-badge {
+  align-self: flex-start;
+  padding: var(--space-1) var(--space-8);
+  border-radius: var(--radius-pill);
+  font-size: var(--text-fine);
+  font-weight: var(--weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.offer-badge--delivery {
+  background: var(--color-gold);
+  color: var(--color-on-gold);
+}
+
+.offer-badge--restaurant {
+  background: var(--gradient-red);
+  color: var(--color-ink);
+}
+
+.offer-badge--bar {
+  border: var(--stroke-1) solid var(--color-gold);
+  color: var(--color-gold-soft);
+}
+
+.promo-card__title {
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  line-height: 1.15;
+  color: var(--color-gold-soft);
+}
+
+.promo-card__value {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+  color: var(--color-gold);
+}
+
+.promo-card__items {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.promo-card__items li {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-8);
+  border-bottom: var(--stroke-1) dotted var(--color-line);
+}
+
+.promo-card__prices {
+  display: inline-flex;
+  gap: var(--space-4);
+  font-variant-numeric: lining-nums;
+}
+
+.promo-card__prices s {
+  color: var(--color-ink-soft);
+}
+
+.promo-card__prices b {
+  color: var(--color-gold);
+}
+
+.offer-terms {
+  display: grid;
+  gap: var(--space-1);
+  font-size: var(--text-fine);
+  color: var(--color-ink-soft);
+}
+
+.offer-terms li::before {
+  content: "* ";
+  color: var(--color-gold);
+}
+
+.promo-card__cta {
+  margin-top: auto;
+  align-self: flex-start;
 }
 
 /* Buffet */

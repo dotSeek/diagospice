@@ -13,6 +13,7 @@ import { createDecipheriv, createHmac, timingSafeEqual } from "node:crypto";
 import { readFileSync } from "node:fs";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { join } from "node:path";
+import { adminContent, adminDiscard, adminPublish, publicMenu, publicOffers } from "./content.js";
 
 type Role = "admin" | "staff";
 interface Session {
@@ -30,7 +31,6 @@ export const MENUS = {
   restaurant: { file: "diago-spice-restaurant-menu.pdf", download: "Diago-Spice-Restaurant-Menu.pdf" },
   bar: { file: "diago-spice-bar-menu.pdf", download: "Diago-Spice-Bar-Menu.pdf" },
 } as const;
-type MenuName = keyof typeof MENUS;
 
 const env = (name: string): string => {
   const value = process.env[name];
@@ -84,7 +84,7 @@ const setCookie = (req: IncomingMessage, res: ServerResponse, value: string, max
   res.setHeader("Set-Cookie", parts.join("; "));
 };
 
-const json = (res: ServerResponse, status: number, body: unknown) => {
+export const json = (res: ServerResponse, status: number, body: unknown) => {
   res.statusCode = status;
   res.setHeader("Content-Type", "application/json; charset=utf-8");
   res.setHeader("Cache-Control", "no-store");
@@ -92,12 +92,12 @@ const json = (res: ServerResponse, status: number, body: unknown) => {
   res.end(JSON.stringify(body));
 };
 
-const readBody = async (req: IncomingMessage): Promise<string> => {
+export const readBody = async (req: IncomingMessage, limit = 4096): Promise<string> => {
   let size = 0;
   const chunks: Buffer[] = [];
   for await (const chunk of req) {
     size += (chunk as Buffer).length;
-    if (size > 4096) throw new Error("Body too large");
+    if (size > limit) throw new Error("Body too large");
     chunks.push(chunk as Buffer);
   }
   return Buffer.concat(chunks).toString("utf8");
@@ -106,7 +106,7 @@ const readBody = async (req: IncomingMessage): Promise<string> => {
 const clientIp = (req: IncomingMessage): string =>
   String(req.headers["x-forwarded-for"] ?? "").split(",")[0].trim() || req.socket.remoteAddress || "unknown";
 
-const sameOrigin = (req: IncomingMessage): boolean => {
+export const sameOrigin = (req: IncomingMessage): boolean => {
   const origin = req.headers.origin;
   if (!origin) return false;
   try {
@@ -174,8 +174,8 @@ export function session(req: IncomingMessage, res: ServerResponse) {
   return json(res, 200, { user: current.user, role: current.role });
 }
 
-const decryptMenu = (name: MenuName): Buffer => {
-  const data = readFileSync(join(process.cwd(), "private", "encrypted", `${MENUS[name].file}.enc`));
+export const decryptFile = (file: string): Buffer => {
+  const data = readFileSync(join(process.cwd(), "private", "encrypted", file));
   const key = Buffer.from(env("MENU_FILES_KEY"), "base64");
   const decipher = createDecipheriv("aes-256-gcm", key, data.subarray(0, 12));
   decipher.setAuthTag(data.subarray(12, 28));
@@ -191,7 +191,7 @@ export function menu(req: IncomingMessage, res: ServerResponse) {
 
   let pdf: Buffer;
   try {
-    pdf = decryptMenu(name);
+    pdf = decryptFile(`${MENUS[name].file}.enc`);
   } catch {
     return json(res, 500, { error: "The menu file could not be opened. Check MENU_FILES_KEY." });
   }
@@ -213,6 +213,11 @@ export async function route(req: IncomingMessage, res: ServerResponse, action: s
     if (action === "logout") return logout(req, res);
     if (action === "session") return session(req, res);
     if (action === "menu") return menu(req, res);
+    if (action === "table-menu") return await publicMenu(req, res);
+    if (action === "offers") return await publicOffers(req, res);
+    if (action === "content") return await adminContent(req, res);
+    if (action === "publish") return await adminPublish(req, res);
+    if (action === "discard") return await adminDiscard(req, res);
     return json(res, 404, { error: "Not found." });
   } catch (error) {
     return json(res, 500, { error: error instanceof Error ? error.message : "Server error." });

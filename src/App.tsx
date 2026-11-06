@@ -9,6 +9,7 @@ import { MenuSection } from "./components/sections/MenuSection";
 import { LazyMotion, MotionConfig, domAnimation } from "motion/react";
 import { ScrollProgress } from "./components/motion/ScrollProgress";
 import { WhatsAppFloat } from "./components/ui/WhatsAppFloat";
+import { GrandOpeningFoodOffers, GrandOpeningSpecials } from "./components/offers/GrandOpeningSpecials";
 
 export function App() {
   return (
@@ -25,7 +26,9 @@ export function App() {
           <div className="frame__inner">
             <main id="main">
               <HeroSection />
+              <GrandOpeningSpecials />
               <AboutSection />
+              <GrandOpeningFoodOffers />
               <MenuSection />
               <GallerySection />
               <div className="visit section-block">

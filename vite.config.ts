@@ -6,6 +6,8 @@ import { route } from "./server/staff";
 
 // Serves the staff API (api/staff/*) in `vite` and `vite preview`, the same code Vercel runs.
 const staffApi = (): Connect.NextHandleFunction => (req, res, next) => {
+  if (req.url?.startsWith("/api/menu")) return void route(req, res, "table-menu");
+  if (req.url?.startsWith("/api/offers")) return void route(req, res, "offers");
   const match = req.url?.match(/^\/api\/staff\/([a-z]+)/);
   if (!match) return next();
   void route(req, res, match[1]);
@@ -29,6 +31,8 @@ export default defineConfig(({ mode }) => {
         input: {
           main: resolve(process.cwd(), "index.html"),
           staff: resolve(process.cwd(), "staff/index.html"),
+          restaurantMenu: resolve(process.cwd(), "restaurant-menu/index.html"),
+          barMenu: resolve(process.cwd(), "bar-menu/index.html"),
         },
       },
     },

@@ -11,3 +11,5 @@ SKILL.md
 !.env.example
 private/data/
 private/menus/
+private/print/
+private/store/

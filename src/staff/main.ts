@@ -4,6 +4,7 @@ import "@fontsource-variable/bitter/wght.css";
 import "@fontsource/great-vibes/latin-400.css";
 import "../styles/theme.css";
 import "./staff.css";
+import { renderQrAdmin } from "./qrAdmin";
 
 const loginForm = document.querySelector<HTMLFormElement>("#login")!;
 const menus = document.querySelector<HTMLElement>("#menus")!;
@@ -14,6 +15,13 @@ const show = (signedIn: { user: string; role: string } | null) => {
   loginForm.hidden = Boolean(signedIn);
   menus.hidden = !signedIn;
   if (signedIn) who.textContent = `${signedIn.user} (${signedIn.role})`;
+  // Table QR tools are for the admin account only.
+  const qrAdmin = document.querySelector<HTMLElement>("#qr-admin")!;
+  qrAdmin.hidden = signedIn?.role !== "admin";
+  if (signedIn?.role === "admin") void renderQrAdmin(document.querySelector<HTMLElement>("#qr-cards")!);
+  const contentAdmin = document.querySelector<HTMLElement>("#content-admin")!;
+  contentAdmin.hidden = signedIn?.role !== "admin";
+  if (signedIn?.role === "admin") void import("./mountEditor").then(({ mountEditor }) => mountEditor(document.querySelector<HTMLElement>("#content-editor")!));
   else loginForm.querySelector<HTMLInputElement>("input[name=username]")?.focus();
 };
 

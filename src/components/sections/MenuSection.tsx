@@ -1,5 +1,8 @@
 import type { ArtName } from "../../data/artwork";
 import { categoryById } from "../../data/menu";
+import { OFFER_LABEL } from "../../data/content";
+import { ItemOffersContext, useMenuDoc } from "../../data/useContent";
+import type { ItemOffer } from "../../data/useContent";
 import { Artwork } from "../ui/Artwork";
 import { BuffetMenu } from "../menu/BuffetMenu";
 import { MenuCategory } from "../menu/MenuCategory";
@@ -11,10 +14,17 @@ import { WhatsAppOrderCard } from "../menu/WhatsAppOrderCard";
 import { restaurant } from "../../data/restaurant";
 import { Reveal } from "../motion/Reveal";
 
-const category = (id: string, art?: ArtName) => <MenuCategory category={categoryById(id)} art={art} />;
-
 export function MenuSection() {
+  // Published delivery menu from the admin dashboard; the built in menu until it loads or if it fails.
+  const preview = typeof location !== "undefined" && new URLSearchParams(location.search).get("preview") === "1";
+  const { doc } = useMenuDoc("delivery", preview);
+  const category = (id: string, art?: ArtName) => (
+    <MenuCategory category={doc?.categories.find((entry) => entry.id === id) ?? categoryById(id)} art={art} />
+  );
+  const itemOffers = new Map<string, ItemOffer>();
+  for (const offer of doc?.offers ?? []) for (const item of offer.items) itemOffers.set(item.name, { offerPrice: item.offerPrice, label: OFFER_LABEL.delivery });
   return (
+    <ItemOffersContext.Provider value={itemOffers}>
     <section id="menu" aria-labelledby="menu-title">
       <Reveal className="menu-hero" effect="zoom">
         <hr className="rule" />
@@ -75,5 +85,6 @@ export function MenuSection() {
       <div className="checker" aria-hidden="true" />
       <BuffetMenu />
     </section>
+    </ItemOffersContext.Provider>
   );
 }

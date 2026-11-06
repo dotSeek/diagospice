@@ -29,6 +29,9 @@ export function HeroSection() {
         <span aria-hidden="true">Spice</span>
       </h1>
       </Reveal>
+      <Reveal as="p" className="hero__resto" effect="fade" delay={0.15}>
+        Resto Bar
+      </Reveal>
       <hr className="rule" />
       <Reveal as="p" className="buffet-strip" effect="flipDown" delay={0.25}>
         <span className="buffet-strip__badge">Weekend buffet</span>
@@ -70,11 +73,14 @@ export function HeroSection() {
           </Reveal>
           <Reveal className="hero__actions" delay={0.55}>
             <Button variant="primary" href="#menu">
-              Explore our menu
+              Delivery menu
             </Button>
             <Button variant="gold" href={restaurant.whatsappUrl} target="_blank" rel="noopener noreferrer">
               Order via WhatsApp
             </Button>
+          </Reveal>
+          <Reveal as="p" className="hero__dine-in" delay={0.6}>
+            Dining in? Scan the QR code on your table for our restaurant and bar menus.
           </Reveal>
           <div className="info-cards">
             <Reveal effect="flipCard" delay={0.65}>

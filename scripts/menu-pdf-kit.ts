@@ -207,7 +207,7 @@ main{flex:1;min-height:0;display:flex;flex-direction:column}
 .strip div{position:relative;overflow:hidden;height:34mm;border-radius:2.5mm;border:.25mm solid rgba(240,168,58,.45);background:#110d0b}
 `;
 
-export type PaperFormat = "B5" | "A4" | "A4-landscape";
+export type PaperFormat = "B5" | "A4" | "A4-landscape" | "A4-landscape-bleed" | "custom";
 
 const formatCss: Record<PaperFormat, string> = {
   B5: "@page{size:176mm 250mm;margin:0}",
@@ -215,10 +215,37 @@ const formatCss: Record<PaperFormat, string> = {
   A4: "@page{size:210mm 297mm;margin:0}html,body{background:#1a1411}.page{zoom:1.188}",
   // Tri-fold leaflets: each landscape A4 side holds three panels.
   "A4-landscape": "@page{size:297mm 210mm;margin:0}html,body{background:#1a1411}",
+  // Print leaflets with 3 mm bleed on every edge: 297 x 210 mm trim inside a 303 x 216 mm page.
+  "A4-landscape-bleed": "@page{size:303mm 216mm;margin:0}html,body{background:#1a1411}",
+  // The caller sets its own @page rules (for example named pages of different sizes).
+  custom: "",
 };
 
 export const htmlDocument = (pageTitle: string, body: string, format: PaperFormat, extraCss = ""): string =>
   `<!doctype html><html lang="en-GB"><head><meta charset="utf-8"><title>${pageTitle}</title><style>${formatCss[format]}${baseStyles}${extraCss}</style></head><body>${body}</body></html>`;
+
+/** Screenshots HTML with headless Chrome at 2x, for proofs that must match the print exactly. */
+export const renderPng = (html: string, outPath: string, widthPx: number, heightPx: number): void => {
+  const workDir = mkdtempSync(join(tmpdir(), "diago-shot-"));
+  const htmlPath = join(workDir, "shot.html");
+  writeFileSync(htmlPath, html);
+  execFileSync(
+    chrome,
+    [
+      "--headless=new",
+      "--disable-gpu",
+      "--hide-scrollbars",
+      "--allow-file-access-from-files",
+      "--force-device-scale-factor=2",
+      "--virtual-time-budget=8000",
+      `--window-size=${widthPx},${heightPx}`,
+      `--screenshot=${outPath}`,
+      pathToFileURL(htmlPath).href,
+    ],
+    { stdio: "pipe" },
+  );
+  rmSync(workDir, { recursive: true, force: true });
+};
 
 /** Prints the HTML to a PDF with headless Chrome. */
 export const renderPdf = (html: string, outPath: string, previewPath?: string): void => {
