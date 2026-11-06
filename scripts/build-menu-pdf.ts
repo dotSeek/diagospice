@@ -49,13 +49,13 @@ const panel = (body: string, extraClass = ""): string =>
 const panelFoot = `<p class="pfoot">${restaurant.name} | ${restaurant.addressInline} | ${restaurant.phoneDisplay}</p>`;
 
 // ---------- Outside: flap, back, cover ----------
-const flap = panel(`${band("chips", "Better together", "Deals")}${deals(deal("meal-deals"))}${deals(deal("rice-curry-deals"))}
+const flap = panel(`${band("chips", "Better together", "Deals")}<div class="stack">${deals(deal("meal-deals"))}${deals(deal("rice-curry-deals"))}
   <div class="buffet-box">
     <p class="bb-head">Weekend buffet</p>
     <p>${buffet.days}, ${buffet.hours}</p>
     <p class="bb-prices"><b>${formatPrice(buffet.adultPrice)}</b> adults <b>${formatPrice(buffet.kidsPrice)}</b> ${buffet.kidsNote.toLowerCase()}</p>
     <p>For booking call ${buffet.bookingPhone}</p>
-  </div>`, "flap");
+  </div></div>`, "flap");
 
 const back = panel(`<div class="back-head">
     <img class="back-logo" src="${logo}" alt="${restaurant.name} logo">
@@ -75,9 +75,9 @@ const back = panel(`<div class="back-head">
   <section class="terms">
     <h2>Delivery information</h2>
     <ul>
-      <li><span class="ic">£</span><span><b>Minimum order ${escapeHtml(delivery.minimumOrder)}</b> (depending on delivery location)</span></li>
-      <li><span class="ic">✓</span><span><b>Free delivery</b> within 3 miles</span></li>
-      <li><span class="ic">+</span><span><b>£2 additional delivery charge</b> for locations beyond 3 miles</span></li>
+      <li><span class="ic">£</span><span><b>Minimum order ${escapeHtml(delivery.minimumOrder)}</b><small>Depending on delivery location</small></span></li>
+      <li><span class="ic">✓</span><span><b>Free delivery</b><small>Within 3 miles</small></span></li>
+      <li><span class="ic">+</span><span><b>£2 delivery charge</b><small>For locations beyond 3 miles</small></span></li>
     </ul>
   </section>
   ${panelFoot}`, "back");
@@ -97,9 +97,9 @@ const cover = `<section class="panel cover"><div class="frame">${coverPhoto()}
 </div></section>`;
 
 // ---------- Inside: three menu panels ----------
-const insideLeft = panel(`${band("wings", "To begin", "Starters")}${block(cat("starters"), 1)}${block(cat("nan"))}${block(cat("desserts"))}`);
-const insideMiddle = panel(`${band("curry", "Slow cooked", "Mains")}${block(cat("mains"), 1)}${block(cat("rice"), 1)}`);
-const insideRight = panel(`${band("burger", "House favourites", "Specials")}${block(cat("specials"), 1)}${block(cat("burgers"), 1)}${block(cat("chips"), 1)}`, "in-right");
+const insideLeft = panel(`${band("wings", "To begin", "Starters")}<div class="stack">${block(cat("starters"), 1)}${block(cat("nan"))}${block(cat("desserts"), 1)}</div>`);
+const insideMiddle = panel(`${band("curry", "Slow cooked", "Mains")}<div class="stack">${block(cat("mains"), 1)}${block(cat("rice"), 1)}</div>`, "in-mid");
+const insideRight = panel(`${band("burger", "House favourites", "Specials")}<div class="stack">${block(cat("specials"), 1)}${block(cat("burgers"), 1)}${block(cat("chips"), 1)}</div>`, "in-right");
 
 const triCss = `
 /* crisp shadow only: Apple's PDF renderer turns blurred text shadows into dark boxes at this size */
@@ -110,25 +110,28 @@ const triCss = `
 .outside{grid-template-columns:97mm 100mm 100mm}
 .inside{grid-template-columns:100mm 100mm 97mm}
 .panel{height:210mm;padding:4.5mm 4mm;min-width:0}
-/* spread each panel top to bottom so frames fill evenly and the last items line up across panels */
-.panel:not(.cover) main{justify-content:space-between}
-.panel:not(.cover) .block{margin-bottom:0}
+/* every panel: photo band, then a stack whose sections spread evenly down to the frame bottom,
+   so headings start at the same height and the last items line up across the spread */
+.stack{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:space-between}
+.stack .block{margin-bottom:0}
+/* share each panel's spare height across its rows so section gaps match on all three inside panels */
+.in-mid .item{margin-bottom:1.92mm}
+.in-right .item{margin-bottom:1.72mm}
+.back main{justify-content:space-between}
 .panel .frame{padding:3.4mm 3.8mm 2.6mm;border-width:.5mm;border-radius:3mm;box-shadow:inset 0 0 0 1mm #1a1411,inset 0 0 0 1.2mm rgba(240,168,58,.38)}
 .title{font-size:12pt;gap:2.4mm;margin-bottom:2.4mm}
 .dia{width:1.6mm;height:1.6mm;box-shadow:0 0 0 .35mm #f0a83a}
 .block{margin-bottom:3.6mm}
 .list.c1{max-width:none}
-.list.c2{column-gap:5mm}
+.list.c2{column-gap:3.4mm;column-rule-color:rgba(240,168,58,.2)}
+.list.c2 .name,.list.c2 .price{font-size:8.4pt}
 .item{margin-bottom:1.45mm}
 .line{gap:1mm}
 .name,.price{font-size:8.8pt}
 .note{font-size:6.3pt;line-height:1.1}
 .dots{min-width:3mm;border-bottom-width:.3mm}
-.band{height:23mm;margin-bottom:3.2mm;padding:2.2mm 3.6mm;border-radius:2mm}
-.in-right .band{height:20mm}
-.flap .band{height:16mm;margin-bottom:2.6mm}
-.flap .band h1{font-size:17pt}
-.flap .band .script{font-size:11pt}
+.band{height:21mm;margin-bottom:3.4mm;padding:2.2mm 3.6mm;border-radius:2mm}
+
 .band .script{font-size:13pt}
 .band h1{font-size:20pt}
 .deals{grid-template-columns:1fr;gap:1.3mm}
@@ -145,7 +148,7 @@ const triCss = `
 .back-logo{width:20mm;margin:0 auto 1mm}
 .back-head h1{font-size:14.5pt}
 .back-head p{font-size:7.6pt;margin-top:1mm}
-.poster{margin:3.2mm auto 0;width:56mm;padding:2.2mm}
+.poster{margin:3.2mm auto 0;width:62mm;padding:2.4mm}
 .scan-label{font-size:8.6pt;letter-spacing:.45mm;margin-bottom:1.4mm}
 .qr-card{padding:3.4mm}
 .wa-btn{margin:3.2mm auto 0;padding:2mm 4mm;font-size:8.4pt;gap:2mm;width:66mm}
@@ -158,7 +161,8 @@ const triCss = `
 .terms{margin-top:3mm;padding:2.6mm 3.2mm;border-radius:2.5mm}
 .terms h2{font-size:9.6pt;margin-bottom:1.6mm}
 .terms ul{gap:1.2mm}
-.terms li{font-size:7.2pt;gap:2mm;line-height:1.25}
+.terms li{font-size:7.2pt;gap:2.4mm;line-height:1.2}
+.terms li small{display:block;font-size:6.6pt;color:rgba(243,230,204,.85)}
 .terms li b{font-size:7.8pt}
 .terms .ic{width:5mm;height:5mm;font-size:7pt}
 .pfoot{font-size:6.2pt;text-align:center;color:rgba(243,230,204,.7);border-top:.25mm solid rgba(240,168,58,.35);padding-top:1.6mm}
