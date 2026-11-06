@@ -31,8 +31,16 @@ export function HeroSection() {
         <span aria-hidden="true">Spice</span>
       </h1>
       <hr className="rule" />
-      <p className="hero__tag">
-        Buffet {buffet.days}, adults {formatPrice(buffet.adultPrice)}, kids under 10 {formatPrice(buffet.kidsPrice)}
+      <p className="buffet-strip">
+        <span className="buffet-strip__badge">Weekend buffet</span>
+        <span className="buffet-strip__item">{buffet.days}</span>
+        <span className="buffet-strip__item">{buffet.hours}</span>
+        <span className="buffet-strip__item">
+          <b>{formatPrice(buffet.adultPrice)}</b> adults
+        </span>
+        <span className="buffet-strip__item">
+          <b>{formatPrice(buffet.kidsPrice)}</b> kids under 10
+        </span>
       </p>
       <div className="hero__photo" style={{ backgroundImage: `url(${heroImage})` }}>
         <div className="hero__copy">
