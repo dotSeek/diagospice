@@ -21,6 +21,8 @@ export const BUFFET_KIDS = "Kids buffet";
 export const PENDING = "PENDING BUSINESS CONFIRMATION";
 
 export interface OfferItem {
+  /** Permanent master item id (centralised menus). Older offers only have the name. */
+  itemId?: string;
   /** Must match a dish or drink name on the same venue's menu. */
   name: string;
   /** Must equal that item's current menu price. */
@@ -106,8 +108,9 @@ export const menuPrices = (doc: Pick<MenuDoc, "categories"> & { venue?: Venue; b
     prices.set(BUFFET_KIDS, doc.buffet.kidsPrice);
   }
   for (const category of doc.categories) {
-    if (category.kind === "items") for (const item of category.items) prices.set(item.name, item.price);
-    else for (const deal of category.deals) prices.set(deal.name, deal.price);
+    // Items switched off on this menu cannot be on offer.
+    if (category.kind === "items") for (const item of category.items) !item.hidden && prices.set(item.name, item.price);
+    else for (const deal of category.deals) !deal.hidden && prices.set(deal.name, deal.price);
   }
   return prices;
 };

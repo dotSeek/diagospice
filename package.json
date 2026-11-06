@@ -13,7 +13,8 @@
     "staff:credentials": "node scripts/create-staff-credentials.ts",
     "leaflet": "node scripts/build-promo-leaflet.ts",
     "qr": "node scripts/build-qr-cards.ts",
-    "poster": "node scripts/build-entrance-poster.ts"
+    "poster": "node scripts/build-entrance-poster.ts",
+    "menu:migrate": "node scripts/migrate-menus.ts"
   },
   "dependencies": {
     "@fontsource-variable/bitter": "^5.3.0",

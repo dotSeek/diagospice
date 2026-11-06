@@ -6,7 +6,7 @@ import { formatPrice } from "../data/menu";
 // Admin menu and offer editor. Every change is a DRAFT until "Publish" is pressed; customers keep
 // seeing the published menu. The server re-checks every rule on save and on publish.
 
-interface Loaded {
+export interface Loaded {
   storage: "redis" | "file" | "read-only";
   hasDraft: boolean;
   publishedUpdated: string;
@@ -15,7 +15,7 @@ interface Loaded {
 
 type Msg = { kind: "ok" | "error"; text: string; problems?: string[] } | null;
 
-const previewUrl: Record<Venue, string> = {
+export const previewUrl: Record<Venue, string> = {
   delivery: "/?preview=1#menu",
   restaurant: "/restaurant-menu/?preview=1",
   bar: "/bar-menu/?preview=1",
@@ -30,23 +30,23 @@ const QUICK_CONDITIONS: Record<Venue, string[]> = {
   buffet: ["Buffet only", "Dine in only", "Not with other offers"],
 };
 
-const NEW_TITLE: Record<Venue, string> = { delivery: "First Order Special", restaurant: "Opening Special", bar: "Bar Opening Special", buffet: "Buffet Special" };
-const AUDIENCE: Record<Venue, string> = { delivery: "New delivery customers", restaurant: "Dine in customers", bar: "Bar customers", buffet: "Buffet guests" };
-const DEFAULT_CONDITION: Record<Venue, string> = { delivery: "Delivery orders only", restaurant: "Dine in only", bar: "Bar only", buffet: "Buffet only" };
-const OFFERS_HEADING: Record<Venue, string> = { delivery: "Delivery offers", restaurant: "Restaurant opening offers", bar: "Bar opening offers", buffet: "Buffet Special offers" };
+export const NEW_TITLE: Record<Venue, string> = { delivery: "First Order Special", restaurant: "Opening Special", bar: "Bar Opening Special", buffet: "Buffet Special" };
+export const AUDIENCE: Record<Venue, string> = { delivery: "New delivery customers", restaurant: "Dine in customers", bar: "Bar customers", buffet: "Buffet guests" };
+export const DEFAULT_CONDITION: Record<Venue, string> = { delivery: "Delivery orders only", restaurant: "Dine in only", bar: "Bar only", buffet: "Buffet only" };
+export const OFFERS_HEADING: Record<Venue, string> = { delivery: "Delivery offers", restaurant: "Restaurant opening offers", bar: "Bar opening offers", buffet: "Buffet Special offers" };
 
-const api = async (url: string, init?: RequestInit) => {
+export const api = async (url: string, init?: RequestInit) => {
   const res = await fetch(url, { credentials: "same-origin", ...init, headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) } });
   const body = await res.json().catch(() => ({}));
   if (!res.ok) throw Object.assign(new Error(body.error ?? "Something went wrong."), { problems: body.problems as string[] | undefined });
   return body;
 };
 
-const when = (iso: string) => new Date(iso).toLocaleString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
-const money = (value: string) => Math.round(parseFloat(value) * 100) / 100;
+export const when = (iso: string) => new Date(iso).toLocaleString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+export const money = (value: string) => Math.round(parseFloat(value) * 100) / 100;
 
 /** Clears "waiting for confirmation" placeholders so nothing hides inside a field the admin cannot see. */
-const editable = (doc: MenuDoc): MenuDoc => {
+export const editable = <T extends Pick<MenuDoc, "offers">>(doc: T): T => {
   const copy = structuredClone(doc);
   for (const offer of copy.offers) {
     if (offer.value === PENDING) offer.value = "";
@@ -282,7 +282,7 @@ export function ContentEditor() {
 
 // ---------- one offer: summary card that opens into a guided form ----------
 
-function OfferCard({
+export function OfferCard({
   offer,
   doc,
   prices,

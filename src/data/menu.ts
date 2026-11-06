@@ -8,12 +8,16 @@ export interface MenuItemData {
   name: string;
   price: number;
   note?: string;
+  /** Admin view only: switched off on this menu. Customers never receive hidden rows. */
+  hidden?: boolean;
 }
 
 export interface DealData {
   name: string;
   price: number;
   includes: string[];
+  /** Admin view only: switched off on this menu. Customers never receive hidden rows. */
+  hidden?: boolean;
 }
 
 export interface ItemCategory {

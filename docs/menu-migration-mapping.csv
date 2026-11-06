@@ -1,0 +1,89 @@
+proposed_item_id,name,type,shared_category,delivery_category,restaurant_category,bar_category,delivery_price,restaurant_price,bar_price,in_buffet,status,question
+item-papadam,Papadam,food,starters,Starters,Starters,Starters,1,1,1,yes,match,
+item-vegi-rolls,Vegi Rolls,food,starters,Starters,Starters,Starters,2.5,1.99,1.99,yes,match,
+item-chicken-spring-rolls,Chicken Spring Rolls,food,starters,Starters,Starters,Starters,2.99,2.5,2.5,yes,match,
+item-mutton-rolls,Mutton Rolls,food,starters,Starters,Starters,Starters,3.5,2.99,2.99,yes,match,
+item-onion-bhaji,Onion Bhaji,food,starters,Starters,Starters,Starters,2.5,2,2,yes,match,
+item-paneer-tikka,Paneer Tikka,food,starters,Starters,Starters,Starters,4.5,4.5,4.5,,match,
+item-potato-tuna-cheese-balls,Potato Tuna Cheese Balls,food,starters,Starters,Starters,Starters,2.5,1.99,1.99,yes,match,
+item-chicken-lollipop,Chicken Lollipop,food,starters,Starters,Starters,Starters,4.99,4.99,4.99,yes,match,
+item-chicken-strips,Chicken Strips,food,starters,Starters,Starters,Starters,3.99,3.99,3.99,yes,match,
+item-chicken-nuggets,Chicken Nuggets,food,starters,Starters,Starters,Starters,3.99,2.99,2.99,yes,match,
+item-garlic-chicken,Garlic Chicken,food,starters,Starters,Starters,Starters,5.99,4.99,4.99,,match,
+item-honey-bbq-chicken-bites,Honey BBQ Chicken Bites,food,starters,Starters,Starters,Starters,5.99,4.99,4.99,yes,match,
+item-chilli-chicken,Chilli Chicken,food,starters,Starters,Starters,Starters,5.99,4.99,4.99,,match,
+item-garlic-parmesan-wings,Garlic Parmesan Wings,food,starters,Starters,Starters,Starters,4.99,3.99,3.99,,match,
+item-sweet-chilli-wings,Sweet Chilli Wings,food,starters,Starters,Starters,Starters,4.99,3.99,3.99,yes,match,
+item-bbq-wings,BBQ Wings,food,starters,Starters,Starters,Starters,4.99,3.99,3.99,,match,
+item-crispy-chicken-wings,Crispy Chicken Wings,food,starters,Starters,Starters,Starters,4.99,3.99,3.99,yes,match,
+item-egg-roast,Egg Roast,food,mains,Mains,Mains,,6.99,5.99,,yes,match,
+item-chicken-roast,Chicken Roast,food,mains,Mains,Mains,Mains with rice or nan,7.99,6.99,7.99,yes,review,bar section says it comes with rice or nan / chips; confirm same product
+item-mutton-korma,Mutton Korma,food,mains,Mains,Mains,Mains with rice or nan,8.99,7.99,8.99,yes,review,bar section says it comes with rice or nan / chips; confirm same product
+item-chicken-korma,Chicken Korma,food,mains,Mains,Mains,Mains with rice or nan,7.99,6.99,7.99,,review,bar section says it comes with rice or nan / chips; confirm same product
+item-butter-chicken,Butter Chicken,food,mains,Mains,Mains,Mains with rice or nan,7.99,6.99,7.99,yes,review,bar section says it comes with rice or nan / chips; confirm same product
+item-chicken-tikka-masala,Chicken Tikka Masala,food,mains,Mains,Mains,,7.99,6.99,,,match,
+item-chicken-madras,Chicken Madras,food,mains,Mains,Mains,Mains with rice or nan,7.99,6.99,7.99,,review,bar section says it comes with rice or nan / chips; confirm same product
+item-chicken-vindaloo,Chicken Vindaloo,food,mains,Mains,Mains,Mains with rice or nan,7.99,6.99,7.99,,review,bar section says it comes with rice or nan / chips; confirm same product
+item-thai-red-chicken-curry,Thai Red Chicken Curry,food,mains,Mains,Mains,Mains with rice or nan,7.99,6.99,7.99,yes,review,bar section says it comes with rice or nan / chips; confirm same product
+item-thai-green-chicken-curry,Thai Green Chicken Curry,food,mains,Mains,Mains,Mains with rice or nan,7.99,6.99,7.99,yes,review,bar section says it comes with rice or nan / chips; confirm same product
+item-panang-curry,Panang Curry,food,mains,Mains,Mains,Mains with rice or nan,7.99,7.99,7.99,,review,bar section says it comes with rice or nan / chips; confirm same product
+item-diago-special-beef-stew,Diago Special Beef Stew,food,mains,Mains,Mains,Mains with rice or nan,10.99,8.99,8.99,,review,bar section says it comes with rice or nan / chips; confirm same product
+item-beef-korma,Beef Korma,food,mains,Mains,Mains,Mains with rice or nan,9.99,8.99,8.99,,review,bar section says it comes with rice or nan / chips; confirm same product
+item-beef-roast,Beef Roast,food,mains,Mains,Mains,Mains with rice or nan,9.99,7.99,8.99,,review,bar section says it comes with rice or nan / chips; confirm same product
+item-chicken-piccata,Chicken Piccata,food,mains,Mains,Mains,Mains with rice or nan,7.99,6.99,7.99,,review,bar section says it comes with rice or nan / chips; confirm same product
+item-paneer-curry,Paneer Curry,food,mains,Mains,Mains,Mains with rice or nan,7.99,6.99,7.99,yes,review,bar section says it comes with rice or nan / chips; confirm same product
+item-steam-rice,Steam Rice,food,rice,Rice,Rice,,2.99,2.99,,,match,
+item-pilaw-rice,Pilaw Rice,food,rice,Rice,Rice,,4.99,3.99,,yes,match,
+item-garlic-rice,Garlic Rice,food,rice,Rice,Rice,,4.99,3.99,,,match,
+item-chicken-dum-biriyani,Chicken Dum Biriyani,food,rice,Rice,Rice,Rice,9.99,8.99,7.99,yes,match,
+item-mutton-dum-biriyani,Mutton Dum Biriyani,food,rice,Rice,Rice,Rice,10.99,10.99,8.99,yes,match,
+item-chicken-fried-rice,Chicken Fried Rice,food,rice,Rice,Rice,Rice,8.99,7.99,6.99,yes,match,
+item-veg-fried-rice,Veg Fried Rice,food,rice,Rice,Rice,Rice,7.99,6.99,5.99,,match,
+item-seafood-fried-rice,Seafood Fried Rice,food,rice,Rice,Rice,Rice,9.99,9.99,8.99,,match,
+item-mixed-fried-rice,Mixed Fried Rice,food,rice,Rice,Rice,Rice,10.99,10.99,8.99,yes,match,
+item-kottu,Kottu,food,specials,Diago special foods,Diago special foods,Diago special foods,9.99,8.99,7.99,yes,match,
+item-dum-parota,Dum Parota,food,specials,Diago special foods,Diago special foods,Diago special foods,7.99,5.99,4.99,,match,
+item-pad-thai,Pad Thai,food,specials,Diago special foods,Diago special foods,Diago special foods,8.99,7.99,6.99,yes,match,
+item-singapore-vermicelli,Singapore Vermicelli,food,specials,Diago special foods,Diago special foods,Diago special foods,8.99,7.99,6.99,yes,match,
+item-chowmein,Chowmein,food,specials,Diago special foods,Diago special foods,Diago special foods,8.99,7.99,6.99,,match,
+item-doner-kebab,Doner Kebab,food,specials,Diago special foods,Diago special foods,Diago special foods,9.99,8.99,7.99,,match,
+item-mixed-doner-kebab,Mixed Doner Kebab,food,specials,Diago special foods,Diago special foods,Diago special foods,8.99,7.99,6.99,yes,match,
+item-chicken-wrap,Chicken Wrap,food,specials,Diago special foods,Diago special foods,Diago special foods,6.99,5.99,5.99,,match,
+item-doner-wrap,Doner Wrap,food,specials,Diago special foods,Diago special foods,Diago special foods,6.99,5.99,5.99,,match,
+item-mixed-kebab-wrap,Mixed Kebab Wrap,food,specials,Diago special foods,Diago special foods,Diago special foods,6.99,5.99,5.99,,match,
+item-parmesan-chicken-wrap,Parmesan Chicken Wrap,food,specials,Diago special foods,Diago special foods,Diago special foods,7.49,6.49,6.49,,match,
+item-beef-burger,Beef Burger,food,burgers,Burgers,Burgers,Burgers with chips,5.99,5.99,5.99,,review,bar section says it comes with rice or nan / chips; confirm same product
+item-chicken-burger,Chicken Burger,food,burgers,Burgers,Burgers,Burgers with chips,4.99,4.99,4.99,,review,bar section says it comes with rice or nan / chips; confirm same product
+item-doner-burger,Doner Burger,food,burgers,Burgers,Burgers,Burgers with chips,5.99,5.99,5.99,,review,bar section says it comes with rice or nan / chips; confirm same product
+item-chicken-fillet-burger,Chicken Fillet Burger,food,burgers,Burgers,Burgers,Burgers with chips,5.49,4.49,4.49,,review,bar section says it comes with rice or nan / chips; confirm same product
+item-garlic-parmesan-dipped-cheese-burger,Garlic Parmesan Dipped Cheese Burger,food,burgers,Burgers,Burgers,Burgers with chips,7.99,6.99,6.99,,review,bar section says it comes with rice or nan / chips; confirm same product
+item-plain-chips,Plain Chips,food,chips,Chips,Chips,Chips,3.5,2.5,2.5,,match,
+item-curly-fries,Curly Fries,food,chips,Chips,Chips,Chips,3.99,2.99,2.99,,match,
+item-nacho-cheese-chips,Nacho Cheese & Chips,food,chips,Chips,Chips,Chips,4.99,3.99,3.99,,match,
+item-cheesy-chips,Cheesy Chips,food,chips,Chips,Chips,Chips,4.99,3.99,3.99,,match,
+item-peri-peri-chips,Peri Peri Chips,food,chips,Chips,Chips,Chips,4.5,3.5,3.5,,match,
+item-loaded-fries,Loaded Fries,food,chips,Chips,Chips,Chips,5.99,4.99,4.99,,match,
+item-mixed-loaded-fries,Mixed Loaded Fries,food,chips,Chips,Chips,Chips,7.99,6.99,6.99,,review,description differs between menus
+item-plain-nan,Plain Nan,food,nan,Nan,Nan,Nan,1.99,1.99,1.99,,match,
+item-butter-nan,Butter Nan,food,nan,Nan,Nan,Nan,2.99,2.99,2.99,,match,
+item-tiramisu,Tiramisu,food,desserts,Desserts,Desserts,Desserts,4.99,3.99,3.99,yes,match,
+item-cheesecake,Cheesecake,food,desserts,Desserts,Desserts,Desserts,4.99,3.99,3.99,yes,match,
+item-caramel-pudding,Caramel Pudding,food,desserts,Desserts,Desserts,Desserts,4.99,3.99,3.99,yes,match,
+item-chocolate-fudge-cake,Chocolate Fudge Cake,food,desserts,Desserts,Desserts,Desserts,4.99,3.99,3.99,yes,match,
+item-classic-burger-meal,Classic Burger Meal,deal,meal-deals,Meal deals,Meal deals,,8.49,7.49,,,match,
+item-premium-burger-meal,Premium Burger Meal,deal,meal-deals,Meal deals,Meal deals,,9.99,8.99,,,match,
+item-wrap-meal,Wrap Meal,deal,meal-deals,Meal deals,Meal deals,,9.49,8.49,,,match,
+item-curry-rice-meal,Curry & Rice Meal,deal,rice-curry-deals,Rice & curry deals,Rice & curry deals,,10.99,9.99,,,match,
+item-beef-special-meal,Beef Special Meal,deal,rice-curry-deals,Rice & curry deals,Rice & curry deals,,12.99,11.99,,,match,
+item-wings-combo,Wings Combo,deal,rice-curry-deals,Rice & curry deals,Rice & curry deals,,7.99,6.99,,,match,
+item-diago-sharing-deal,Diago Sharing Deal,deal,rice-curry-deals,Rice & curry deals,Rice & curry deals,,14.99,13.99,,,match,
+item-soup-veg,Soup (Veg),food,soup,,,Soup,,,4.99,,match,
+item-soup-non-veg,Soup (Non Veg),food,soup,,,Soup,,,3.99,,match,
+item-chicken-tikka,Chicken Tikka,food,mains,,,Mains with rice or nan,,,7.99,yes,review,bar section says it comes with rice or nan / chips; confirm same product | bar only; is it the same dish as Chicken Tikka Masala?
+item-coca-cola,Coca Cola,drink,soft-drinks,,,Soft drinks,,,1.99,,match,
+item-fanta,Fanta,drink,soft-drinks,,,Soft drinks,,,1.99,,match,
+item-pepsi,Pepsi,drink,soft-drinks,,,Soft drinks,,,1.99,,match,
+item-chips,Chips,food,diago-special-foods,,,,,,,yes,review,buffet dish not matched exactly: Plain Chips?
+item-aloo-keema,Aloo Keema,food,vegetarian-options,,,,,,,yes,review,buffet dish not matched exactly: not on any menu; create as buffet only item?
+item-daal-makhni,Daal Makhni,food,vegetarian-options,,,,,,,yes,review,buffet dish not matched exactly: not on any menu; create as buffet only item?
+item-cauliflower-65,Cauliflower 65,food,vegetarian-options,,,,,,,yes,review,buffet dish not matched exactly: not on any menu; create as buffet only item?

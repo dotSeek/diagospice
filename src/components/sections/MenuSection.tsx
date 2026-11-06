@@ -18,9 +18,15 @@ export function MenuSection() {
   // Published delivery menu from the admin dashboard; the built in menu until it loads or if it fails.
   const preview = typeof location !== "undefined" && new URLSearchParams(location.search).get("preview") === "1";
   const { doc } = useMenuDoc("delivery", preview);
-  const category = (id: string, art?: ArtName) => (
-    <MenuCategory category={doc?.categories.find((entry) => entry.id === id) ?? categoryById(id)} art={art} />
-  );
+  // Until the published menu loads (or if it fails) the built in section shows. Once it has loaded,
+  // a section the admin has emptied or hidden stays hidden, never the old built in prices.
+  const placed = new Set(["starters", "nan", "meal-deals", "mains", "specials", "rice", "burgers", "desserts", "rice-curry-deals", "chips"]);
+  const category = (id: string, art?: ArtName) => {
+    const found = doc ? doc.categories.find((entry) => entry.id === id) : categoryById(id);
+    return found ? <MenuCategory category={found} art={art} /> : null;
+  };
+  // Sections added in the admin that the fixed layout does not know yet go at the end.
+  const extra = doc?.categories.filter((entry) => !placed.has(entry.id)) ?? [];
   const itemOffers = new Map<string, ItemOffer>();
   for (const offer of doc?.offers ?? []) for (const item of offer.items) itemOffers.set(item.name, { offerPrice: item.offerPrice, label: OFFER_LABEL.delivery });
   return (
@@ -34,7 +40,7 @@ export function MenuSection() {
         <hr className="rule" />
       </Reveal>
       <p className="menu-tagline">Delivery menu</p>
-      <MenuCategoryTabs />
+      <MenuCategoryTabs categories={doc?.categories} />
       <div className="menu-download">
         <Button href={restaurant.whatsappUrl} target="_blank" rel="noopener noreferrer" variant="primary">
           Order via WhatsApp
@@ -81,6 +87,19 @@ export function MenuSection() {
           <Artwork name="fries" className="menu-art" />
         </div>
       </div>
+
+      {extra.length ? (
+        <>
+          <hr className="rule menu-divider" />
+          <div className="menu-row-3">
+            {extra.map((entry) => (
+              <div className="menu-col" key={entry.id}>
+                <MenuCategory category={entry} />
+              </div>
+            ))}
+          </div>
+        </>
+      ) : null}
 
       <div className="checker" aria-hidden="true" />
       <BuffetMenu />
