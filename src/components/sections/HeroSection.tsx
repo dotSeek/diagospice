@@ -55,13 +55,14 @@ export function HeroSection() {
             Where Indian Spice Meets the Wild West!
           </Reveal>
           <Reveal as="p" className="hero__text" delay={0.38}>
-            Pull up a chair on Pengwern Road, Clase, and saddle up for a flavour packed ride! From sizzling
-            kottu and aromatic dum biryani to rich, spice loaded curries, juicy burgers and fiery wings, we
-            bring the bold flavours of India and Sri Lanka together with the untamed spirit of the Old
-            American West.
+            Pull up a chair on Pengwern Road, Clase, for sizzling kottu, dum biryani, rich curries, juicy
+            burgers and fiery wings.
           </Reveal>
           <Reveal as="p" className="hero__closing" delay={0.44}>
-            Big flavours. Bold spices. Wild Western vibes. Welcome to Diago Spice Resto Bar!
+            Desi Spice. Western Soul. Big Flavours!{" "}
+            <span role="img" aria-label="cowboy">
+              🤠
+            </span>
           </Reveal>
           <Reveal as="ul" className="chips" delay={0.45}>
             {chips.map((chip) => (
