@@ -1,5 +1,5 @@
 import type { ArtName } from "../../data/artwork";
-import { categoryById, delivery } from "../../data/menu";
+import { categoryById } from "../../data/menu";
 import { Artwork } from "../ui/Artwork";
 import { BuffetMenu } from "../menu/BuffetMenu";
 import { MenuCategory } from "../menu/MenuCategory";
@@ -23,9 +23,6 @@ export function MenuSection() {
         <hr className="rule" />
       </div>
       <p className="menu-tagline">Delivery menu</p>
-      <p className="menu-delivery">
-        {delivery.headline} {delivery.beyond} Minimum order {delivery.minimumOrder}. {delivery.howToOrder}
-      </p>
       <MenuCategoryTabs />
       <div className="menu-download">
         <Button href={restaurant.whatsappUrl} target="_blank" rel="noopener noreferrer" variant="primary">

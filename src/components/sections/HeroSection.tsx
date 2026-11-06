@@ -1,13 +1,11 @@
 import type { ReactNode } from "react";
 import { heroImage } from "../../data/images";
-import { buffet, delivery, formatPrice } from "../../data/menu";
+import { buffet, formatPrice } from "../../data/menu";
 import { restaurant } from "../../data/restaurant";
 import { BadgeIcon } from "../ui/BadgeIcon";
 import { Button } from "../ui/Button";
 
 const chips = [
-  delivery.freeDelivery,
-  `Minimum order ${delivery.minimumOrder}`,
   "Order via WhatsApp",
   "Meal deals",
   "Weekend buffet",
