@@ -51,9 +51,17 @@ export function HeroSection() {
             <br />
             <span className="gold-text">Serious spice.</span>
           </Reveal>
-          <Reveal as="p" delay={0.35}>
-            Pull up a chair on Pengwern Road in Clase for kottu, dum biriyani, rich curries, burgers and
-            wings, served in the spirit of the old American West.
+          <Reveal as="p" className="hero__lead" delay={0.3}>
+            Where Indian Spice Meets the Wild West!
+          </Reveal>
+          <Reveal as="p" className="hero__text" delay={0.38}>
+            Pull up a chair on Pengwern Road, Clase, and saddle up for a flavour packed ride! From sizzling
+            kottu and aromatic dum biryani to rich, spice loaded curries, juicy burgers and fiery wings, we
+            bring the bold flavours of India and Sri Lanka together with the untamed spirit of the Old
+            American West.
+          </Reveal>
+          <Reveal as="p" className="hero__closing" delay={0.44}>
+            Big flavours. Bold spices. Wild Western vibes. Welcome to Diago Spice Resto Bar!
           </Reveal>
           <Reveal as="ul" className="chips" delay={0.45}>
             {chips.map((chip) => (
