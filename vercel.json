@@ -60,11 +60,20 @@
       ]
     },
     {
-      "source": "/(restaurant-menu|bar-menu)/(.*)",
+      "source": "/(restaurant-menu|bar-menu|offers)/(.*)",
       "headers": [
         {
           "key": "X-Robots-Tag",
           "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/(poster|qr)/(.*)",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex"
         }
       ]
     }

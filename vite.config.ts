@@ -33,6 +33,7 @@ export default defineConfig(({ mode }) => {
           staff: resolve(process.cwd(), "staff/index.html"),
           restaurantMenu: resolve(process.cwd(), "restaurant-menu/index.html"),
           barMenu: resolve(process.cwd(), "bar-menu/index.html"),
+          offers: resolve(process.cwd(), "offers/index.html"),
         },
       },
     },

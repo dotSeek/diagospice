@@ -24,8 +24,9 @@ export function useMenuDoc(venue: Venue, preview = false): { doc: MenuDoc | null
   return state;
 }
 
-export function useLiveOffers(): Record<Venue, Offer[]> | null {
-  const [offers, setOffers] = useState<Record<Venue, Offer[]> | null>(null);
+/** Live offers per venue: undefined while loading, null if they could not load. */
+export function useLiveOffers(): Record<Venue, Offer[]> | null | undefined {
+  const [offers, setOffers] = useState<Record<Venue, Offer[]> | null | undefined>(undefined);
   useEffect(() => {
     load<Record<Venue, Offer[]>>("/api/offers").then(setOffers).catch(() => setOffers(null));
   }, []);

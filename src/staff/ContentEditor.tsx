@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { OFFER_LABEL, PENDING, VENUES, VENUE_TITLE, menuPrices, offerProblems } from "../data/content";
 import type { BuffetInfo, MenuDoc, Offer, Venue } from "../data/content";
 import { formatPrice } from "../data/menu";
@@ -76,6 +76,20 @@ export function ContentEditor() {
     load(venue).catch((error) => setMessage({ kind: "error", text: error.message }));
   }, [venue, load]);
 
+  // The entrance poster panel asks to open a menu's offers ("Manage restaurant offers").
+  const dirtyRef = useRef(dirty);
+  dirtyRef.current = dirty;
+  useEffect(() => {
+    const open = (event: Event) => {
+      const target = (event as CustomEvent<Venue>).detail;
+      if (!VENUES.includes(target)) return;
+      if (dirtyRef.current && !window.confirm("You have unsaved changes. Leave without saving?")) return;
+      setVenue(target);
+    };
+    window.addEventListener("diago:edit-offers", open);
+    return () => window.removeEventListener("diago:edit-offers", open);
+  }, []);
+
   const prices = useMemo(() => (doc ? menuPrices(doc) : new Map<string, number>()), [doc]);
 
   if (!doc || !loaded) return <p className="card__lead">{message?.text ?? "Loading menus..."}</p>;
@@ -104,7 +118,10 @@ export function ContentEditor() {
   const save = () => run("Draft saved. Preview it, then publish when you are happy.", () => api(`/api/staff/content?venue=${venue}`, { method: "PUT", body: JSON.stringify(doc) }));
   const publish = () => {
     if (!window.confirm(`Publish the ${VENUE_TITLE[venue].toLowerCase()} now? Customers will see it within a minute.`)) return;
-    void run("Published. The website and QR menu now show this version.", () => api(`/api/staff/publish?venue=${venue}`, { method: "POST" }));
+    void run("Published. The website and QR menu now show this version.", async () => {
+      await api(`/api/staff/publish?venue=${venue}`, { method: "POST" });
+      window.dispatchEvent(new CustomEvent("diago:published", { detail: venue }));
+    });
   };
   const discard = () => {
     if (!window.confirm("Throw away the draft and go back to the published menu?")) return;

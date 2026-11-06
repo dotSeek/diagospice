@@ -224,8 +224,8 @@ const formatCss: Record<PaperFormat, string> = {
 export const htmlDocument = (pageTitle: string, body: string, format: PaperFormat, extraCss = ""): string =>
   `<!doctype html><html lang="en-GB"><head><meta charset="utf-8"><title>${pageTitle}</title><style>${formatCss[format]}${baseStyles}${extraCss}</style></head><body>${body}</body></html>`;
 
-/** Screenshots HTML with headless Chrome at 2x, for proofs that must match the print exactly. */
-export const renderPng = (html: string, outPath: string, widthPx: number, heightPx: number): void => {
+/** Screenshots HTML with headless Chrome (2x by default), for proofs that must match the print exactly. */
+export const renderPng = (html: string, outPath: string, widthPx: number, heightPx: number, scale = 2): void => {
   const workDir = mkdtempSync(join(tmpdir(), "diago-shot-"));
   const htmlPath = join(workDir, "shot.html");
   writeFileSync(htmlPath, html);
@@ -236,7 +236,7 @@ export const renderPng = (html: string, outPath: string, widthPx: number, height
       "--disable-gpu",
       "--hide-scrollbars",
       "--allow-file-access-from-files",
-      "--force-device-scale-factor=2",
+      `--force-device-scale-factor=${scale}`,
       "--virtual-time-budget=8000",
       `--window-size=${widthPx},${heightPx}`,
       `--screenshot=${outPath}`,

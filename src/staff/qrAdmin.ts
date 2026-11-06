@@ -72,3 +72,95 @@ export async function renderQrAdmin(container: HTMLElement) {
     container.append(card);
   }
 }
+
+// ---------- Entrance offers poster (A4, glass door or window) ----------
+// The files are built by `npm run poster` into public/poster/. The poster has ONE QR code, for
+// /offers/, which shows the live restaurant and bar offers in separate sections. It carries a link
+// only, so it stays valid whatever offers are live; this panel shows what customers will see today.
+const poster = "/poster/diago-spice-offers-poster";
+
+const VENUE_NAME = { restaurant: "Restaurant", bar: "Bar" } as const;
+type PosterVenue = keyof typeof VENUE_NAME;
+
+const escape = (text: string) => text.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
+
+/** Opens the offers editor on the given menu (handled by ContentEditor). */
+const editOffers = (venue: PosterVenue) => {
+  window.dispatchEvent(new CustomEvent("diago:edit-offers", { detail: venue }));
+  document.querySelector("#content-admin")?.scrollIntoView({ behavior: "smooth", block: "start" });
+};
+
+/** Loads the published menu behind a QR code and describes what a customer sees after scanning. */
+const checkDestination = async (venue: PosterVenue) => {
+  const res = await fetch(`/api/menu?name=${venue}`, { cache: "no-store" });
+  if (!res.ok) throw new Error(`The ${venue} menu did not load (${res.status}).`);
+  const doc = (await res.json()) as { categories: { kind: string; items?: unknown[]; deals?: unknown[] }[]; offers: { title: string; items: { name: string; offerPrice: number }[] }[] };
+  const rows = doc.categories.reduce((sum, category) => sum + (category.items?.length ?? category.deals?.length ?? 0), 0);
+  return { rows, offers: doc.offers };
+};
+
+export async function renderPosterAdmin(container: HTMLElement) {
+  if (container.dataset.ready) return;
+  container.dataset.ready = "1";
+  const venues: PosterVenue[] = ["restaurant", "bar"];
+  container.innerHTML = `<div class="poster-admin">
+    <a class="poster-admin__preview" href="${poster}.pdf" target="_blank" rel="noopener" title="Open the A4 PDF">
+      <img src="${poster}-preview.jpg" alt="Preview of the A4 Special Offers entrance poster" width="900" height="1273" loading="lazy">
+    </a>
+    <div class="poster-admin__side">
+      <div class="qr-card__actions">
+        <a class="btn btn--gold" href="${poster}.pdf" download>Download A4 PDF</a>
+        <a class="btn btn--outline" href="${poster}-bleed.pdf" download>Download print shop PDF (3 mm bleed)</a>
+        <a class="btn btn--outline" href="${poster}.png" download>Download PNG (300 DPI)</a>
+      </div>
+      <h3 class="poster-admin__h">What customers see after scanning</h3>
+      <div class="poster-check">
+        <div class="poster-check__head"><b>Poster QR code</b><a href="${restaurant.websiteUrl}/offers/" target="_blank" rel="noopener">${restaurant.websiteDisplay}/offers/</a></div>
+        <ul class="poster-admin__checks">
+          ${venues
+            .map(
+              (venue) => `<li data-venue="${venue}">
+            <p class="poster-check__status" aria-live="polite"><b>${VENUE_NAME[venue]}:</b> checking...</p>
+            <div class="poster-check__btns">
+              <a class="mini-link" href="/${venue}-menu/" target="_blank" rel="noopener">Open ${VENUE_NAME[venue].toLowerCase()} menu</a>
+              <button type="button" class="mini-link" data-edit="${venue}">Manage ${VENUE_NAME[venue].toLowerCase()} offers</button>
+            </div>
+          </li>`,
+            )
+            .join("")}
+        </ul>
+        <div class="poster-check__btns"><a class="btn btn--outline btn--small" href="/offers/" target="_blank" rel="noopener">Open the page the QR code opens</a></div>
+      </div>
+      <button type="button" class="btn btn--outline poster-admin__recheck">Check again</button>
+      <p class="editor__hint">Printing: A4 portrait, no scaling ("Actual size"). Mount it inside the glass facing outward, away from strong reflections. The print shop file has 3 mm bleed with trim marks set in the PDF.</p>
+    </div>
+  </div>`;
+
+  container.querySelectorAll<HTMLButtonElement>("[data-edit]").forEach((button) => button.addEventListener("click", () => editOffers(button.dataset.edit as PosterVenue)));
+
+  const check = async () => {
+    for (const venue of venues) {
+      const status = container.querySelector<HTMLElement>(`[data-venue="${venue}"] .poster-check__status`)!;
+      const label = `<b>${VENUE_NAME[venue]}:</b> `;
+      status.className = "poster-check__status";
+      status.innerHTML = `${label}checking...`;
+      try {
+        const { rows, offers } = await checkDestination(venue);
+        status.classList.add("is-ok");
+        status.innerHTML =
+          label +
+          (offers.length
+            ? `${offers.length} offer${offers.length > 1 ? "s" : ""} live: ${offers
+                .map((offer) => `<b>${escape(offer.title)}</b> (${offer.items.map((item) => `${escape(item.name)} £${item.offerPrice.toFixed(2)}`).join(", ")})`)
+                .join(". ")}. Menu of ${rows} items.`
+            : `no offers live, so customers are sent to the regular ${venue} menu (${rows} items).`);
+      } catch (error) {
+        status.classList.add("is-bad");
+        status.innerHTML = label + escape((error as Error).message);
+      }
+    }
+  };
+  container.querySelector(".poster-admin__recheck")!.addEventListener("click", () => void check());
+  window.addEventListener("diago:published", () => void check());
+  void check();
+}

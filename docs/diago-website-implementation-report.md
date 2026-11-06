@@ -29,6 +29,9 @@ Admin routes need the signed admin cookie, same origin and JSON. The staff role 
 - **QR table menus** `/restaurant-menu/` and `/bar-menu/` (`src/table/*`): no sign in, hidden from search,
   not linked from the public site. Show the venue's Grand Opening Special Offers (regular and offer price,
   conditions) and highlight discounted rows with the venue badge. "Please order with our staff / at the bar".
+- **Offers page** `/offers/` (`src/table/OffersHub.tsx`): the one page behind the entrance poster's QR
+  code. Live restaurant offers and live bar offers in separate sections, each linking to its own menu.
+  With no live offers it says so and points to the menus, never showing old prices. Hidden from search.
 - **Website**: Grand Opening Specials (after the hero) and Grand Opening Food Offers (after About)
   render only when an offer is live (`src/components/offers/*`). The delivery menu reads the published
   delivery menu and highlights live delivery offer items, falling back to the built in menu.
@@ -44,10 +47,31 @@ Admin routes need the signed admin cookie, same origin and JSON. The staff role 
   Save draft, Preview draft, Publish, Discard draft.
 - **Table QR codes** (`src/staff/qrAdmin.ts`): previews, Download print PDF (A6 card + A4 poster),
   PNG, SVG, quick Print table card, Open menu. Codes always point at the live site.
+- **Entrance offers poster** (`renderPosterAdmin` in `src/staff/qrAdmin.ts`): preview, Download A4 PDF,
+  print shop PDF (3 mm bleed), PNG (300 DPI), a live check of what the QR code shows today (offers live per
+  menu, or the regular menu), Open menu buttons, and "Manage restaurant/bar offers" which opens that tab
+  in the editor. It checks again after each publish.
 
 ### 5. Print files
 - `public/qr/diago-spice-{restaurant,bar}-menu-qr.{pdf,png,svg}` (`npm run qr`).
 - A4 tri-fold promotional leaflet (`npm run leaflet`), see `diago-trifold-print-specification.md`.
+- **A4 entrance offers poster** (`npm run poster`, `scripts/build-entrance-poster.ts`) into `public/poster/`:
+  - Content: logo, "Diago Spice Resto Bar", "Special offers await!", "Your next favourite flavour is
+    just a scan away!", then one panel: "Our offers", "Crave the Spice. Love the Taste!", ONE QR code for
+    `https://diagospice.co.uk/offers/` (60 mm, error correction Q, plain white card, solid panel behind it),
+    a gold "Scan, Discover, Savour" button and the short address, then the footer lines.
+    No dishes, prices, dates, venue names or opening messages, so it is reusable all year.
+  - Style: the same gold frame, red diamonds, rope divider and "wanted poster" panel as the menus, the
+    dining photo behind the headline, and the website's leaf wallpaper (`--texture-wallpaper`) drawn as
+    an inline SVG pattern so it stays vector in every viewer.
+  - Files: `diago-spice-offers-poster.pdf` (A4 210 x 297 mm), `-bleed.pdf` (216 x 303 mm, TrimBox and
+    BleedBox set, all text and the QR at least 12 mm inside the trim), `.png` (2480 x 3508 px, 300 DPI),
+    `-preview.jpg` for the admin page. Fonts embedded as TrueType (static Playfair Display and Bitter from
+    `@fontsource`, Great Vibes), no Type 3 fonts.
+  - Colour: RGB. Ghostscript is not installed here, so no CMYK conversion was made; most print shops
+    convert on output. Ask the printer for a proof if colour must be exact.
+  - Tested: the QR decodes from the Chrome PDF, Apple's renderer (Quick Look, as on iPhone and WhatsApp)
+    and the PNG, also with simulated glare, blur, a tilted view, low light and a 800 px phone capture.
 - Delivery tri-fold and A4 staff menus unchanged.
 
 ## Connecting Upstash Redis (needed before admins can save on the live site)
