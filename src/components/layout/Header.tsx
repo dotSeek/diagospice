@@ -26,7 +26,10 @@ export function Header() {
           aria-expanded={menuOpen}
           onClick={() => setMenuOpen(true)}
         >
-          Menu
+          <svg className="menu-circle__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+            <path d="M4 7h16M4 12h16M4 17h11" />
+          </svg>
+          <span className="menu-circle__label">Menu</span>
         </button>
         <a className="logo-card" href="#home" aria-label={`${restaurant.name} home`}>
           <img src="/brand/logo-small.webp" alt="" width={240} height={274} />

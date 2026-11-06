@@ -5,7 +5,7 @@ type MapStatus = "waiting" | "ready" | "failed";
 
 const LOAD_TIMEOUT_MS = 15000;
 
-const PIN = `<svg viewBox="0 0 40 52" aria-hidden="true" focusable="false"><path d="M20 1C9.500 1 1 9.300 1 19.600 1 33.500 20 51 20 51s19-17.500 19-31.400C39 9.300 30.500 1 20 1z" fill="#c4060c" stroke="#f9f8f2" stroke-width="2"/><path d="M20 9c1.200 6 4.800 9.600 10.800 10.800-6 1.200-9.600 4.800-10.800 10.800-1.200-6-4.800-9.600-10.800-10.800C15.200 18.600 18.800 15 20 9z" fill="#f9f8f2"/></svg>`;
+const PIN = `<svg viewBox="0 0 40 52" aria-hidden="true" focusable="false"><path d="M20 1C9.500 1 1 9.300 1 19.600 1 33.500 20 51 20 51s19-17.500 19-31.400C39 9.300 30.500 1 20 1z" fill="#c4060c" stroke="#f0a83a" stroke-width="2.500"/><path d="M20 9c1.200 6 4.800 9.600 10.800 10.800-6 1.200-9.600 4.800-10.800 10.800-1.200-6-4.800-9.600-10.800-10.800C15.200 18.600 18.800 15 20 9z" fill="#f8d596"/></svg>`;
 
 /** Open source map (MapLibre GL with OpenFreeMap tiles). Its code loads only when the map nears the screen. */
 export function RestaurantMap() {

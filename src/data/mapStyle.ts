@@ -3,17 +3,17 @@
 import type { StyleSpecification } from "maplibre-gl";
 
 const colors = {
-  paper: "#f9f8f2",
-  park: "#ebe7d9",
-  water: "#d6cfc4",
-  building: "#efeadf",
-  buildingLine: "#dcd5c8",
-  casing: "#cabfb5",
-  road: "#ffffff",
-  mainRoad: "#eeb9b6",
-  mainCasing: "#c4060c",
-  ink: "#1a1a1a",
-  inkSoft: "#5a5249",
+  paper: "#1a1411",
+  park: "#20201a",
+  water: "#12191d",
+  building: "#241c17",
+  buildingLine: "#32271f",
+  casing: "#3a2e25",
+  road: "#2e251f",
+  mainRoad: "#6a4a1d",
+  mainCasing: "#f0a83a",
+  ink: "#f3e6cc",
+  inkSoft: "#b9a68a",
 };
 
 const FONT = ["Noto Sans Regular"];

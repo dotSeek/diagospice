@@ -2,7 +2,7 @@ import type { AnchorHTMLAttributes, ReactNode } from "react";
 
 interface ButtonProps extends AnchorHTMLAttributes<HTMLAnchorElement> {
   href: string;
-  variant?: "outline" | "primary" | "light";
+  variant?: "outline" | "primary" | "light" | "gold";
   children: ReactNode;
 }
 

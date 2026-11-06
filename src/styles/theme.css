@@ -1,21 +1,34 @@
 /* Diago Spice design tokens. See DESIGN.md. */
 :root {
-  --color-paper: #f9f8f2;
-  --color-ink: #1a1a1a;
-  --color-black: #1a1a1a;
-  --color-red: #c4060c; /* from the red range in the logo */
+  /* Night and gold, taken from the logo: black badge, gold lettering, red ribbon */
+  --color-night: #110d0b;
+  --color-paper: #1a1411;
+  --color-panel: #241b16;
+  --color-ink: #f3e6cc;
+  --color-ink-soft: rgb(243 230 204 / 0.74);
+  --color-black: #0b0907;
+  --color-gold: #f0a83a;
+  --color-gold-soft: #f8d596;
+  --color-gold-dark: #c9801f;
+  --color-line: rgb(240 168 58 / 0.34);
+  --color-gold-tint: rgb(240 168 58 / 0.08);
+  --color-on-gold: #1a1411;
+  --color-red: #c4060c;
   --color-red-dark: #960408;
-  --color-red-40: rgb(196 6 12 / 0.4);
-  --color-border: #e6e6e6;
-  --color-stone: #cabfb5;
-  --color-stone-15: rgb(202 191 181 / 0.22);
-  --color-wallpaper: #ddd8cc;
   --color-white: #ffffff;
-  --overlay: rgb(26 26 26 / 0.62);
-  --shadow-sheet: -2px 2px 3px rgb(0 0 0 / 0.4);
+  --art-bg: #1a1411;
+  --gradient-gold: linear-gradient(180deg, #fde4ab 0%, #f0a83a 58%, #c9801f 100%);
+  --gradient-red: linear-gradient(135deg, #d40b12 0%, #9c0509 100%);
+  --gradient-red-hover: linear-gradient(135deg, #b0080e 0%, #7a0306 100%);
+  --gradient-gold-hover: linear-gradient(180deg, #fff0cc 0%, #f8c26a 58%, #e39a2e 100%);
+  --overlay: linear-gradient(90deg, rgb(17 13 11 / 0.9) 0%, rgb(17 13 11 / 0.55) 60%, rgb(17 13 11 / 0.25) 100%);
+  --shadow-sheet: 0 24px 60px rgb(0 0 0 / 0.55);
+  --shadow-card: 0 12px 30px rgb(0 0 0 / 0.35);
+  --glow-gold: 0 0 0 1px rgb(240 168 58 / 0.25), 0 10px 30px rgb(240 168 58 / 0.12);
 
   --font-display: "Playfair Display Variable", Georgia, serif;
   --font-body: "Bitter Variable", Georgia, serif;
+  --font-script: "Great Vibes", "Brush Script MT", cursive;
 
   --text-fine: 14px;
   --text-xs: 18px;
@@ -51,9 +64,11 @@
   --space-15: 144px;
 
   --radius-sm: 2px;
+  --radius-md: 14px;
+  --radius-pill: 999px;
   --duration: 180ms;
   --sheet-max: 1820px;
 
-  --texture-paper: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='4' seed='3'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .33 0 0 0 0 .3 0 0 0 .05 0'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23p)'/%3E%3C/svg%3E");
-  --texture-wallpaper: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' fill='none' stroke='%23e9e5db' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='M30 112C14 88 16 66 30 50c14 16 16 38 0 62M30 50C24 34 12 28-2 30c2 14 14 24 32 20M30 50c6-16 18-22 32-20-2 14-14 24-32 20'/%3E%3Cpath d='M90 52C74 28 76 6 90-10c14 16 16 38 0 62M90 112C74 88 76 66 90 50M90 50c-6-16-18-22-32-20M90 50c6-16 18-22 32-20-2 14-14 24-32 20'/%3E%3C/svg%3E");
+  --texture-paper: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='4' seed='3'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 .85 0 0 0 0 .6 0 0 0 .05 0'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23p)'/%3E%3C/svg%3E");
+  --texture-wallpaper: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' fill='none' stroke='%23241b15' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='M30 112C14 88 16 66 30 50c14 16 16 38 0 62M30 50C24 34 12 28-2 30c2 14 14 24 32 20M30 50c6-16 18-22 32-20-2 14-14 24-32 20'/%3E%3Cpath d='M90 52C74 28 76 6 90-10c14 16 16 38 0 62M90 112C74 88 76 66 90 50M90 50c-6-16-18-22-32-20M90 50c6-16 18-22 32-20-2 14-14 24-32 20'/%3E%3C/svg%3E");
 }
