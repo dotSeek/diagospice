@@ -14,6 +14,61 @@ export interface Loaded {
   doc: MenuDoc;
 }
 
+// Who approved an offer. Staff pick Owner or Manager and today's date is filled in, for example
+// "Owner, 7 Nov 2026". The box shows a suggestion: pressing Tab in the empty box uses it as the
+// value. Other asks for a name, and the date is added when they leave the box. The text stays
+// editable so staff can add how, for example "by WhatsApp".
+const CONFIRMERS = ["Owner", "Manager"];
+const todayShown = () => new Date().toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+const hasYear = (text: string) => /\b\d{4}\b/.test(text);
+
+function ConfirmedBy({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+  const [otherPicked, setOtherPicked] = useState(false);
+  const input = useRef<HTMLInputElement>(null);
+  const known = CONFIRMERS.find((role) => value === role || value.startsWith(`${role},`) || value.startsWith(`${role} `));
+  const role = known ?? (value.trim() || otherPicked ? "Other" : "");
+  const other = role === "Other";
+  const suggestion = other ? "" : `${role || "Owner"}, ${todayShown()}`;
+  return (
+    <div className="confirmed">
+      <label>
+        Confirmed by (staff only, never shown to customers)
+        <select
+          value={role}
+          onChange={(event) => {
+            const picked = event.target.value;
+            setOtherPicked(picked === "Other");
+            onChange(CONFIRMERS.includes(picked) ? `${picked}, ${todayShown()}` : "");
+            if (picked === "Other") requestAnimationFrame(() => input.current?.focus());
+          }}
+        >
+          <option value="">Choose who confirmed it</option>
+          {CONFIRMERS.map((name) => (
+            <option key={name}>{name}</option>
+          ))}
+          <option value="Other">Other</option>
+        </select>
+      </label>
+      <label>
+        {other ? "Name (the date is added for you)" : "Name and date (press Tab to use the suggestion)"}
+        <input
+          ref={input}
+          value={value}
+          placeholder={other ? `For example: Sam, ${todayShown()}` : suggestion}
+          onChange={(event) => onChange(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Tab" && !event.shiftKey && !value.trim() && suggestion) onChange(suggestion);
+          }}
+          onBlur={() => {
+            const text = value.trim().replace(/,$/, "");
+            if (text && !hasYear(text)) onChange(`${text}, ${todayShown()}`);
+          }}
+        />
+      </label>
+    </div>
+  );
+}
+
 type Msg = { kind: "ok" | "error"; text: string; problems?: string[] } | null;
 
 export const previewUrl: Record<Venue, string> = {
@@ -425,10 +480,7 @@ export function OfferCard({
           <div className="step">
             <span className="step__n">4</span>
             <div className="step__body">
-              <label>
-                Confirmed by (staff only, never shown to customers)
-                <input value={offer.source} onChange={(event) => onChange({ source: event.target.value })} placeholder="For example: Owner, 7 Nov 2026" />
-              </label>
+              <ConfirmedBy value={offer.source} onChange={(source) => onChange({ source })} />
             </div>
           </div>
 

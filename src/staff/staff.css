@@ -842,3 +842,7 @@ textarea { border-radius: var(--radius-sm); scrollbar-color: var(--color-gold) t
 .dates { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 .custom-conds__add, .custom-conds__add input { min-width: 0; }
 @media (max-width: 480px) { .dates { grid-template-columns: minmax(0, 1fr); } }
+
+/* Confirmed by: pick list with the editable note under it. */
+.confirmed { display: grid; gap: 12px; min-width: 0; }
+.confirmed select { width: 100%; }
