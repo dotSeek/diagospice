@@ -16,6 +16,7 @@ import { join } from "node:path";
 import { buffet, formatPrice } from "../src/data/menu.ts";
 import type { DealCategory, ItemCategory } from "../src/data/menu.ts";
 import { restaurant } from "../src/data/restaurant.ts";
+import { ALWAYS_ON, AVAILABLE } from "./dine-in-available.ts";
 import { band, block, buffetPage, coverPhoto, deals, facebookQr, htmlDocument, logo, page, renderPdf, root, strip } from "./menu-pdf-kit.ts";
 
 if (!existsSync(join(root, "private", "data", "restaurantMenu.ts"))) {
@@ -39,13 +40,36 @@ const { restaurantItems, restaurantDeals } = (await import(`${privateData}restau
 };
 const { barItems } = (await import(`${privateData}barMenu.ts`)) as { barItems: ItemCategory[] };
 
+// Availability: rows not on the available list are marked hidden. The QR menus drop hidden rows
+// (and empty sections) for customers, admins still see them, and the printed menus leave them out.
+const available = (name: string, categoryId: string) => !AVAILABLE || ALWAYS_ON.has(categoryId) || AVAILABLE.has(name);
+const markItems = (list: ItemCategory[]): ItemCategory[] =>
+  list.map((category) => ({ ...category, items: category.items.map((item) => (available(item.name, category.id) ? item : { ...item, hidden: true })) }));
+const markDeals = (list: DealCategory[]): DealCategory[] =>
+  list.map((category) => ({ ...category, deals: category.deals.map((deal) => (available(deal.name, category.id) ? deal : { ...deal, hidden: true })) }));
+const restaurantRows = markItems(restaurantItems);
+const restaurantDealRows = markDeals(restaurantDeals);
+const barRows = markItems(barItems);
+if (AVAILABLE) {
+  const names = new Set([...restaurantItems, ...barItems].flatMap((category) => category.items.map((item) => item.name)));
+  const unknown = [...AVAILABLE].filter((name) => !names.has(name));
+  if (unknown.length) throw new Error(`Not on the dine in menus: ${unknown.join(", ")}`);
+}
+
 const byId = (list: ItemCategory[], id: string): ItemCategory => {
   const found = list.find((category) => category.id === id);
   if (!found) throw new Error(`Unknown category ${id}`);
   return found;
 };
-const r = (id: string, cols = 2) => block(byId(restaurantItems, id), cols);
-const b = (id: string, cols = 2) => block(byId(barItems, id), cols);
+const shown = (category: ItemCategory): ItemCategory => ({ ...category, items: category.items.filter((item) => !item.hidden) });
+const has = (list: ItemCategory[], id: string) => shown(byId(list, id)).items.length > 0;
+const printed = (list: ItemCategory[], id: string, cols = 2) => (has(list, id) ? block(shown(byId(list, id)), cols) : "");
+const r = (id: string, cols = 2) => printed(restaurantRows, id, cols);
+const b = (id: string, cols = 2) => printed(barRows, id, cols);
+const printedDeals = restaurantDealRows.map((category) => ({ ...category, deals: category.deals.filter((deal) => !deal.hidden) })).filter((category) => category.deals.length);
+/** Numbers the pages that have content, in order. */
+const pages = (bodies: (string | ((n: number) => string) | null)[]) =>
+  bodies.filter((body) => body !== null).map((body, i) => (typeof body === "function" ? body(i + 2) : page(i + 2, body!)));
 
 const buffetBand = `<div class="delivery">
   <p class="d-head">Buffet ${buffet.days}</p>
@@ -103,17 +127,40 @@ const backCover = (n: number) =>
   </div>`,
   );
 
+// Full menus keep the original page plan. With an availability list the shorter menus are
+// packed onto fewer pages, and the cover chips name only dishes that are on.
+const restaurantPages = AVAILABLE
+  ? [
+      `${band("curry", "To begin", "Starters and mains")}${r("starters")}${r("mains")}${r("nan")}`,
+      `${band("biriyani", "House favourites", "Rice and specials")}${r("rice")}${r("specials")}${r("chips")}${r("desserts")}`,
+      printedDeals.length ? `${band("chips", "Better together", "Deals")}${printedDeals.map(deals).join("")}` : null,
+    ]
+  : [
+      `${band("wings", "To begin", "Starters")}${r("starters")}${r("nan")}`,
+      `${band("curry", "Slow cooked", "Mains")}${r("mains")}${r("chips")}`,
+      `${band("biriyani", "House favourites", "Rice and specials")}${r("rice")}${r("specials")}`,
+      `${band("burger", "Stacked high", "Burgers")}${r("burgers", 1)}${r("desserts")}${strip("dessert", "chips", "wings")}`,
+      `${band("chips", "Better together", "Deals")}${printedDeals.map(deals).join("")}`,
+    ];
+const barPages = AVAILABLE
+  ? [
+      `${band("curry", "Served with rice or nan", "Starters and mains")}${b("bar-starters")}${b("bar-soup")}${b("bar-mains")}${b("bar-nan")}`,
+      `${band("biriyani", "House favourites", "Rice and specials")}${b("bar-rice")}${b("bar-specials")}${b("bar-burgers", 1)}${b("bar-chips")}`,
+      `${band("dessert", "Something sweet", "Desserts and drinks")}${b("bar-desserts")}${b("bar-soft-drinks", 1)}${strip("chips", "wings", "biriyani")}`,
+    ]
+  : [
+      `${band("wings", "To begin", "Starters and soup")}${b("bar-starters")}${b("bar-soup")}`,
+      `${band("curry", "Served with rice or nan", "Mains")}${b("bar-mains")}${b("bar-nan")}`,
+      `${band("biriyani", "House favourites", "Rice and specials")}${b("bar-rice")}${b("bar-specials")}`,
+      `${band("burger", "Served with chips", "Burgers and chips")}${b("bar-burgers", 1)}${b("bar-chips")}`,
+      `${band("dessert", "Something sweet", "Desserts and drinks")}${b("bar-desserts")}${b("bar-soft-drinks", 1)}${strip("chips", "wings", "biriyani")}`,
+    ];
+
 const restaurantMenu = htmlDocument(
   `${restaurant.name} Restaurant Menu | ${restaurant.addressInline}`,
   [
-    cover("Menu", "Restaurant menu", ["Curries", "Kottu", "Biriyani", "Burgers", "Wings", "Meal deals"], "hero"),
-    page(2, `${band("wings", "To begin", "Starters")}${r("starters")}${r("nan")}`),
-    page(3, `${band("curry", "Slow cooked", "Mains")}${r("mains")}${r("chips")}`),
-    page(4, `${band("biriyani", "House favourites", "Rice and specials")}${r("rice")}${r("specials")}`),
-    page(5, `${band("burger", "Stacked high", "Burgers")}${r("burgers", 1)}${r("desserts")}${strip("dessert", "chips", "wings")}`),
-    page(6, `${band("chips", "Better together", "Deals")}${restaurantDeals.map(deals).join("")}`),
-    buffetPage(7, buffet),
-    backCover(8),
+    cover("Menu", "Restaurant menu", AVAILABLE ? ["Curries", "Kottu", "Biriyani", "Fried rice", "Chips"] : ["Curries", "Kottu", "Biriyani", "Burgers", "Wings", "Meal deals"], "hero"),
+    ...pages([...restaurantPages, (n) => buffetPage(n, buffet), (n) => backCover(n)]),
   ].join("\n"),
   "A4",
 );
@@ -121,13 +168,8 @@ const restaurantMenu = htmlDocument(
 const barMenu = htmlDocument(
   `${restaurant.name} Bar Menu | ${restaurant.addressInline}`,
   [
-    cover("Bar menu", "Food and soft drinks", ["Soup", "Starters", "Curries", "Burgers", "Soft drinks"], "dining", "60pt"),
-    page(2, `${band("wings", "To begin", "Starters and soup")}${b("bar-starters")}${b("bar-soup")}`),
-    page(3, `${band("curry", "Served with rice or nan", "Mains")}${b("bar-mains")}${b("bar-nan")}`),
-    page(4, `${band("biriyani", "House favourites", "Rice and specials")}${b("bar-rice")}${b("bar-specials")}`),
-    page(5, `${band("burger", "Served with chips", "Burgers and chips")}${b("bar-burgers", 1)}${b("bar-chips")}`),
-    page(6, `${band("dessert", "Something sweet", "Desserts and drinks")}${b("bar-desserts")}${b("bar-soft-drinks", 1)}${strip("chips", "wings", "biriyani")}`),
-    backCover(7),
+    cover("Bar menu", "Food and soft drinks", AVAILABLE ? ["Starters", "Curries", "Kottu", "Biriyani", "Soft drinks"] : ["Soup", "Starters", "Curries", "Burgers", "Soft drinks"], "dining", "60pt"),
+    ...pages([...barPages, (n) => backCover(n)]),
   ].join("\n"),
   "A4",
 );
@@ -154,8 +196,8 @@ const tableMenus = {
     title: "Restaurant menu",
     note: "Dine in prices. Please order with our staff.",
     categories: [
-      ...["starters", "mains", "rice", "specials", "burgers", "chips", "nan", "desserts"].map((id) => byId(restaurantItems, id)),
-      ...restaurantDeals,
+      ...["starters", "mains", "rice", "specials", "burgers", "chips", "nan", "desserts"].map((id) => byId(restaurantRows, id)),
+      ...restaurantDealRows,
     ],
     buffet,
   },
@@ -163,7 +205,7 @@ const tableMenus = {
     venue: "bar",
     title: "Bar menu",
     note: "Bar prices. Please order at the bar.",
-    categories: ["bar-starters", "bar-soup", "bar-mains", "bar-nan", "bar-rice", "bar-specials", "bar-burgers", "bar-chips", "bar-desserts", "bar-soft-drinks"].map((id) => byId(barItems, id)),
+    categories: ["bar-starters", "bar-soup", "bar-mains", "bar-nan", "bar-rice", "bar-specials", "bar-burgers", "bar-chips", "bar-desserts", "bar-soft-drinks"].map((id) => byId(barRows, id)),
   },
 };
 for (const [venue, data] of Object.entries(tableMenus)) {
